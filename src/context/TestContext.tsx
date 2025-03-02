@@ -1,7 +1,6 @@
-
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { Question, questions as allQuestions } from '@/data/questionData';
-import { toast } from '@/components/ui/sonner';
+import { toast } from "sonner";
 
 interface UserAnswer {
   questionId: number;
@@ -66,7 +65,6 @@ export const TestProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(null);
   const [score, setScore] = useState<number>(0);
 
-  // Initialize test data
   useEffect(() => {
     const shuffledQuestions = [...allQuestions].sort(() => Math.random() - 0.5);
     setQuestions(shuffledQuestions);
@@ -81,20 +79,17 @@ export const TestProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     setUserAnswers(initialUserAnswers);
     
-    // Load from localStorage if available
     try {
       const savedTest = localStorage.getItem('ssc_mock_test');
       if (savedTest) {
         const parsedData = JSON.parse(savedTest);
         
-        // Only restore if test is in progress (not completed)
         if (parsedData.isTestStarted && !parsedData.isTestCompleted) {
           setCurrentQuestionIndex(parsedData.currentQuestionIndex || 0);
           setUserAnswers(parsedData.userAnswers || initialUserAnswers);
           setIsTestStarted(parsedData.isTestStarted || false);
           setRemainingTime(parsedData.remainingTime || timePerQuestion);
           
-          // Notify user
           toast("Test progress restored from your last session");
         }
       }
@@ -103,7 +98,6 @@ export const TestProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  // Save progress to localStorage
   useEffect(() => {
     if (isTestStarted && !isTestCompleted) {
       const dataToSave = {
@@ -117,17 +111,13 @@ export const TestProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [currentQuestionIndex, userAnswers, isTestStarted, isTestCompleted, remainingTime]);
 
-  // Timer logic
   useEffect(() => {
     if (isTestStarted && !isTestCompleted) {
-      // Clear any existing interval
       if (timerInterval) clearInterval(timerInterval);
       
-      // Set up new timer
       const interval = setInterval(() => {
         setRemainingTime((prevTime) => {
           if (prevTime <= 1) {
-            // Time's up for this question
             skipQuestion();
             return timePerQuestion;
           }
@@ -137,23 +127,19 @@ export const TestProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       setTimerInterval(interval);
       
-      // Cleanup
       return () => {
         if (interval) clearInterval(interval);
       };
     }
   }, [isTestStarted, isTestCompleted, currentQuestionIndex]);
   
-  // Calculate score when test is completed
   useEffect(() => {
     if (isTestCompleted) {
       const correctAnswers = userAnswers.filter(answer => answer.isCorrect).length;
       setScore(correctAnswers);
       
-      // Clear saved test
       localStorage.removeItem('ssc_mock_test');
       
-      // Clear timer
       if (timerInterval) {
         clearInterval(timerInterval);
         setTimerInterval(null);
@@ -169,10 +155,8 @@ export const TestProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const endTest = () => {
     setIsTestCompleted(true);
     
-    // Count unattempted questions
     const unattempted = userAnswers.filter(a => a.selectedOption === null && !a.isSkipped).length;
     
-    // Notify user about score
     const correctAnswers = userAnswers.filter(answer => answer.isCorrect).length;
     toast(`Test completed! Your score: ${correctAnswers}/100`);
     
@@ -181,7 +165,6 @@ export const TestProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: "These questions were marked as skipped."
       });
       
-      // Mark all unattempted as skipped
       setUserAnswers(prev => 
         prev.map(answer => 
           answer.selectedOption === null && !answer.isSkipped
@@ -197,7 +180,6 @@ export const TestProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setCurrentQuestionIndex(currentQuestionIndex + 1);
       setRemainingTime(timePerQuestion);
     } else {
-      // At last question, ask if they want to end
       toast("This is the last question. Use the 'Submit Test' button to finish.", {
         duration: 3000,
         action: {
@@ -241,12 +223,10 @@ export const TestProvider: React.FC<{ children: React.ReactNode }> = ({ children
       )
     );
     
-    // Give user feedback
     if (isCorrect) {
       toast("Correct answer!", { duration: 1500 });
     }
     
-    // Automatically go to next question after selection
     setTimeout(() => {
       if (currentQuestionIndex < questions.length - 1) {
         goToNextQuestion();
@@ -263,7 +243,6 @@ export const TestProvider: React.FC<{ children: React.ReactNode }> = ({ children
       )
     );
     
-    // Move to next question if possible
     if (currentQuestionIndex < questions.length - 1) {
       goToNextQuestion();
     }
@@ -286,7 +265,6 @@ export const TestProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const restartTest = () => {
-    // Reset all states to initial values
     setCurrentQuestionIndex(0);
     
     const shuffledQuestions = [...allQuestions].sort(() => Math.random() - 0.5);
@@ -306,7 +284,6 @@ export const TestProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsTestCompleted(false);
     setScore(0);
     
-    // Clear localStorage
     localStorage.removeItem('ssc_mock_test');
     
     toast("Test has been reset. Ready to start a new attempt!");
