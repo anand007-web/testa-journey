@@ -21,6 +21,7 @@ import {
 import { Progress } from '@/components/ui/progress';
 import { motion } from 'framer-motion';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from 'recharts';
+import { cn } from '@/lib/utils';
 
 const TestResults: React.FC = () => {
   const { questions, userAnswers, score, restartTest } = useTest();
@@ -142,7 +143,7 @@ const TestResults: React.FC = () => {
                       <span className="font-medium">Correct Answers</span>
                       <span className="text-primary font-medium">{correctAnswers} ({Math.round((correctAnswers / totalQuestions) * 100)}%)</span>
                     </div>
-                    <Progress value={(correctAnswers / totalQuestions) * 100} className="h-2 bg-muted" indicatorClassName="bg-primary" />
+                    <Progress value={(correctAnswers / totalQuestions) * 100} className="h-2 bg-muted" />
                   </div>
                   
                   <div className="space-y-1">
@@ -150,7 +151,7 @@ const TestResults: React.FC = () => {
                       <span className="font-medium">Incorrect Answers</span>
                       <span className="text-destructive font-medium">{incorrectAnswers} ({Math.round((incorrectAnswers / totalQuestions) * 100)}%)</span>
                     </div>
-                    <Progress value={(incorrectAnswers / totalQuestions) * 100} className="h-2 bg-muted" indicatorClassName="bg-destructive" />
+                    <Progress value={(incorrectAnswers / totalQuestions) * 100} className="h-2 bg-muted" />
                   </div>
                   
                   <div className="space-y-1">
@@ -158,7 +159,7 @@ const TestResults: React.FC = () => {
                       <span className="font-medium">Skipped Questions</span>
                       <span className="text-amber-500 font-medium">{skippedQuestions} ({Math.round((skippedQuestions / totalQuestions) * 100)}%)</span>
                     </div>
-                    <Progress value={(skippedQuestions / totalQuestions) * 100} className="h-2 bg-muted" indicatorClassName="bg-amber-500" />
+                    <Progress value={(skippedQuestions / totalQuestions) * 100} className="h-2 bg-muted" />
                   </div>
                   
                   {unattemptedQuestions > 0 && (
@@ -167,7 +168,7 @@ const TestResults: React.FC = () => {
                         <span className="font-medium">Unattempted</span>
                         <span className="text-slate-500 font-medium">{unattemptedQuestions} ({Math.round((unattemptedQuestions / totalQuestions) * 100)}%)</span>
                       </div>
-                      <Progress value={(unattemptedQuestions / totalQuestions) * 100} className="h-2 bg-muted" indicatorClassName="bg-slate-400" />
+                      <Progress value={(unattemptedQuestions / totalQuestions) * 100} className="h-2 bg-muted" />
                     </div>
                   )}
                 </div>
@@ -201,7 +202,6 @@ const TestResults: React.FC = () => {
                   <Progress 
                     value={(difficultyBreakdown.easy.correct / difficultyBreakdown.easy.total) * 100} 
                     className="h-1.5 mt-2 bg-green-200" 
-                    indicatorClassName="bg-green-500" 
                   />
                 </div>
                 
@@ -218,7 +218,6 @@ const TestResults: React.FC = () => {
                   <Progress 
                     value={(difficultyBreakdown.medium.correct / difficultyBreakdown.medium.total) * 100} 
                     className="h-1.5 mt-2 bg-amber-200" 
-                    indicatorClassName="bg-amber-500" 
                   />
                 </div>
                 
@@ -235,7 +234,6 @@ const TestResults: React.FC = () => {
                   <Progress 
                     value={(difficultyBreakdown.hard.correct / difficultyBreakdown.hard.total) * 100} 
                     className="h-1.5 mt-2 bg-red-200" 
-                    indicatorClassName="bg-red-500" 
                   />
                 </div>
               </div>
