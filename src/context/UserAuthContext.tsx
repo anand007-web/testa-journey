@@ -51,18 +51,24 @@ export const UserAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   
   useEffect(() => {
     // Check if user is logged in from localStorage
-    const storedUser = localStorage.getItem('user_auth');
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error('Error parsing user auth data:', error);
-        localStorage.removeItem('user_auth');
+    const checkUserAuth = () => {
+      const storedUser = localStorage.getItem('user_auth');
+      if (storedUser) {
+        try {
+          const parsedUser = JSON.parse(storedUser);
+          setUser(parsedUser);
+        } catch (error) {
+          console.error('Error parsing user auth data:', error);
+          localStorage.removeItem('user_auth');
+        }
       }
-    }
-    setIsLoading(false);
+      setIsLoading(false);
+    };
+    
+    checkUserAuth();
   }, []);
   
+  // Enhanced registration function
   const register = async (data: UserRegistrationData): Promise<boolean> => {
     // In a real app, you would call an API to register the user
     try {
@@ -127,6 +133,7 @@ export const UserAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user_auth');
+    toast.success('Logged out successfully');
   };
   
   const getUserProfile = () => user;

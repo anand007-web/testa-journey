@@ -12,35 +12,52 @@ import {
   SearchIcon, 
   TimerIcon, 
   TagIcon, 
-  ArrowLeftIcon 
+  ArrowLeftIcon,
+  UserIcon
 } from 'lucide-react';
 import { Quiz, getPublishedQuizzes, Category, getCategories } from '@/data/quizModels';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from 'sonner';
 
 const QuizList: React.FC = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, logout } = useUserAuth();
+  const { user, isAuthenticated, logout } = useUserAuth();
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Redirect if not authenticated
+  // Enhanced authentication check with redirect and notification
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login');
-    }
+    const checkAuth = () => {
+      if (!isAuthenticated) {
+        toast.error('Please log in to view quizzes', {
+          description: 'You need to be logged in to access this page'
+        });
+        navigate('/login', { state: { from: '/quizzes' } });
+      } else {
+        setIsLoading(false);
+      }
+    };
+    
+    // Short timeout to ensure auth state is loaded
+    const timer = setTimeout(checkAuth, 300);
+    return () => clearTimeout(timer);
   }, [isAuthenticated, navigate]);
 
   useEffect(() => {
-    // Load published quizzes
-    const loadedQuizzes = getPublishedQuizzes();
-    setQuizzes(loadedQuizzes);
-    
-    // Load categories
-    const loadedCategories = getCategories();
-    setCategories(loadedCategories);
-  }, []);
+    if (isAuthenticated) {
+      // Load published quizzes
+      const loadedQuizzes = getPublishedQuizzes();
+      setQuizzes(loadedQuizzes);
+      
+      // Load categories
+      const loadedCategories = getCategories();
+      setCategories(loadedCategories);
+      setIsLoading(false);
+    }
+  }, [isAuthenticated]);
 
   const handleLogout = () => {
     logout();
@@ -72,6 +89,18 @@ const QuizList: React.FC = () => {
     return filteredQuizzes;
   };
 
+  // Show loading state when checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading quizzes...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -79,6 +108,14 @@ const QuizList: React.FC = () => {
         <div className="container mx-auto py-4 px-4 flex justify-between items-center">
           <h1 className="text-xl md:text-2xl font-bold">SSC Mock Tests</h1>
           <div className="flex items-center gap-2">
+            {user && (
+              <div className="hidden md:flex items-center gap-2 mr-4">
+                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                  <UserIcon className="h-4 w-4" />
+                </div>
+                <span className="text-sm font-medium">{user.username}</span>
+              </div>
+            )}
             <Button variant="ghost" size="sm" asChild className="mr-2">
               <Link to="/dashboard">
                 <ArrowLeftIcon className="mr-2 h-4 w-4" />

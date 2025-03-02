@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,7 @@ import { useUserAuth } from '@/context/UserAuthContext';
 
 const UserLogin: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login, isAuthenticated } = useUserAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -22,12 +23,15 @@ const UserLogin: React.FC = () => {
     general: '',
   });
 
+  // Get the redirect path from location state (if any)
+  const from = location.state?.from || '/dashboard';
+
   // Redirect if already logged in
   React.useEffect(() => {
     if (isAuthenticated) {
-      navigate('/dashboard');
+      navigate(from);
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, from]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -71,7 +75,7 @@ const UserLogin: React.FC = () => {
       
       if (success) {
         toast.success('Login successful!');
-        navigate('/dashboard');
+        navigate(from);
       } else {
         setErrors({
           ...errors,
