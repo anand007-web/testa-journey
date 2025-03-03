@@ -90,7 +90,9 @@ export const getQuizzes = (): Quiz[] => {
       localStorage.setItem('quizzes', JSON.stringify([]));
       return [];
     }
-    return JSON.parse(quizzes);
+    const parsedQuizzes = JSON.parse(quizzes);
+    console.log('Retrieved quizzes from localStorage:', parsedQuizzes.length);
+    return parsedQuizzes;
   } catch (error) {
     console.error('Error getting quizzes:', error);
     return [];
@@ -100,7 +102,9 @@ export const getQuizzes = (): Quiz[] => {
 export const getPublishedQuizzes = (): Quiz[] => {
   const quizzes = getQuizzes();
   const published = quizzes.filter(quiz => quiz.isPublished === true);
+  console.log('Retrieved all quizzes:', quizzes.length);
   console.log('Retrieved published quizzes:', published.length);
+  console.log('Published quiz IDs:', published.map(q => q.id));
   return published;
 };
 
@@ -147,6 +151,7 @@ export const saveQuiz = (quiz: Quiz): void => {
         ...quiz,
         updatedAt: new Date().toISOString(),
       };
+      console.log(`Updated existing quiz: ${quiz.title} (ID: ${quiz.id}), Published: ${quiz.isPublished}`);
     } else {
       // Add new quiz
       quizzes.push({
@@ -155,9 +160,11 @@ export const saveQuiz = (quiz: Quiz): void => {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       });
+      console.log(`Added new quiz: ${quiz.title} (ID: ${quiz.id}), Published: ${quiz.isPublished}`);
     }
     
     localStorage.setItem('quizzes', JSON.stringify(quizzes));
+    console.log(`Saved ${quizzes.length} quizzes to localStorage`);
   } catch (error) {
     console.error('Error saving quiz:', error);
   }
@@ -213,6 +220,10 @@ export const initializeQuizData = (): void => {
   if (!localStorage.getItem('quizzes')) {
     localStorage.setItem('quizzes', JSON.stringify([]));
     console.log('Initialized empty quizzes array');
+  } else {
+    const quizzes = JSON.parse(localStorage.getItem('quizzes') || '[]');
+    console.log(`Found ${quizzes.length} existing quizzes`);
+    console.log(`Published quizzes: ${quizzes.filter(q => q.isPublished).length}`);
   }
   
   if (!localStorage.getItem('quiz_attempts')) {
@@ -223,5 +234,8 @@ export const initializeQuizData = (): void => {
   if (!localStorage.getItem('users')) {
     localStorage.setItem('users', JSON.stringify([]));
     console.log('Initialized empty users array');
+  } else {
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    console.log(`Found ${users.length} existing users`);
   }
 };

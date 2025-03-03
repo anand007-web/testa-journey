@@ -15,7 +15,7 @@ import {
   ArrowLeftIcon,
   UserIcon
 } from 'lucide-react';
-import { Quiz, getPublishedQuizzes, Category, getCategories } from '@/data/quizModels';
+import { Quiz, getPublishedQuizzes, Category, getCategories, getQuizzes } from '@/data/quizModels';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 
@@ -48,9 +48,14 @@ const QuizList: React.FC = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
+      // Check both published and all quizzes for debugging
+      const allQuizzes = getQuizzes();
+      console.log("All quizzes in system:", allQuizzes.length);
+      console.log("All quizzes published status:", allQuizzes.map(q => ({ id: q.id, title: q.title, published: q.isPublished })));
+      
       // Load published quizzes
       const loadedQuizzes = getPublishedQuizzes();
-      console.log('Published quizzes loaded:', loadedQuizzes);
+      console.log('Published quizzes loaded for display:', loadedQuizzes.length);
       setQuizzes(loadedQuizzes);
       
       // Load categories

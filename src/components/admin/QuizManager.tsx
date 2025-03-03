@@ -189,14 +189,13 @@ const QuizManager: React.FC<QuizManagerProps> = ({ onEditQuizQuestions }) => {
     saveQuiz(updatedQuiz);
     loadData();
     
+    console.log(`Quiz ${updatedQuiz.id} publish status toggled to: ${updatedQuiz.isPublished}`);
+    
     if (!quiz.isPublished) {
       toast.success('Quiz published successfully! Users can now access this quiz.');
     } else {
       toast.success('Quiz unpublished. Users can no longer access this quiz.');
     }
-    
-    const allQuizzes = getQuizzes();
-    localStorage.setItem('quizzes', JSON.stringify(allQuizzes));
   };
 
   const getCategoryName = (categoryId: string) => {
