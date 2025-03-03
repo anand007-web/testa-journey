@@ -1,4 +1,3 @@
-
 import { Question, DifficultyLevel } from '@/data/questionData';
 
 export interface Category {
@@ -71,7 +70,12 @@ export const defaultCategories: Category[] = [
 export const getCategories = (): Category[] => {
   try {
     const categories = localStorage.getItem('quiz_categories');
-    return categories ? JSON.parse(categories) : defaultCategories;
+    if (!categories) {
+      // If no categories exist, initialize with defaults and save
+      localStorage.setItem('quiz_categories', JSON.stringify(defaultCategories));
+      return defaultCategories;
+    }
+    return JSON.parse(categories);
   } catch (error) {
     console.error('Error getting categories:', error);
     return defaultCategories;
@@ -81,7 +85,12 @@ export const getCategories = (): Category[] => {
 export const getQuizzes = (): Quiz[] => {
   try {
     const quizzes = localStorage.getItem('quizzes');
-    return quizzes ? JSON.parse(quizzes) : [];
+    if (!quizzes) {
+      // If no quizzes exist, initialize with empty array and save
+      localStorage.setItem('quizzes', JSON.stringify([]));
+      return [];
+    }
+    return JSON.parse(quizzes);
   } catch (error) {
     console.error('Error getting quizzes:', error);
     return [];
@@ -90,7 +99,9 @@ export const getQuizzes = (): Quiz[] => {
 
 export const getPublishedQuizzes = (): Quiz[] => {
   const quizzes = getQuizzes();
-  return quizzes.filter(quiz => quiz.isPublished);
+  const published = quizzes.filter(quiz => quiz.isPublished === true);
+  console.log('Retrieved published quizzes:', published.length);
+  return published;
 };
 
 export const getQuizById = (id: string): Quiz | undefined => {
@@ -192,15 +203,25 @@ export const getUserQuizAttemptsById = (userId: string): UserQuizAttempt[] => {
 
 // Initialize local storage with default categories if none exist
 export const initializeQuizData = (): void => {
+  console.log('Initializing quiz data...');
+  
   if (!localStorage.getItem('quiz_categories')) {
     localStorage.setItem('quiz_categories', JSON.stringify(defaultCategories));
+    console.log('Initialized default categories');
   }
   
   if (!localStorage.getItem('quizzes')) {
     localStorage.setItem('quizzes', JSON.stringify([]));
+    console.log('Initialized empty quizzes array');
   }
   
   if (!localStorage.getItem('quiz_attempts')) {
     localStorage.setItem('quiz_attempts', JSON.stringify([]));
+    console.log('Initialized empty quiz attempts array');
+  }
+  
+  if (!localStorage.getItem('users')) {
+    localStorage.setItem('users', JSON.stringify([]));
+    console.log('Initialized empty users array');
   }
 };

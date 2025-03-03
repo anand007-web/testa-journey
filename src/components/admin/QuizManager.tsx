@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -113,7 +112,6 @@ const QuizManager: React.FC<QuizManagerProps> = ({ onEditQuizQuestions }) => {
     loadData();
     toast.success('Quiz created successfully');
     
-    // Prompt to add questions
     setTimeout(() => {
       if (confirm('Would you like to add questions to this quiz now?')) {
         onEditQuizQuestions(quiz);
@@ -190,7 +188,15 @@ const QuizManager: React.FC<QuizManagerProps> = ({ onEditQuizQuestions }) => {
     
     saveQuiz(updatedQuiz);
     loadData();
-    toast.success(quiz.isPublished ? 'Quiz unpublished' : 'Quiz published successfully');
+    
+    if (!quiz.isPublished) {
+      toast.success('Quiz published successfully! Users can now access this quiz.');
+    } else {
+      toast.success('Quiz unpublished. Users can no longer access this quiz.');
+    }
+    
+    const allQuizzes = getQuizzes();
+    localStorage.setItem('quizzes', JSON.stringify(allQuizzes));
   };
 
   const getCategoryName = (categoryId: string) => {

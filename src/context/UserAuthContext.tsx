@@ -70,10 +70,12 @@ export const UserAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   
   // Enhanced registration function
   const register = async (data: UserRegistrationData): Promise<boolean> => {
-    // In a real app, you would call an API to register the user
     try {
+      // Initialize users array if it doesn't exist yet
+      const existingUsersJson = localStorage.getItem('users');
+      const users = existingUsersJson ? JSON.parse(existingUsersJson) : [];
+      
       // Check if user already exists
-      const users = JSON.parse(localStorage.getItem('users') || '[]');
       const existingUser = users.find((u: any) => u.email === data.email);
       
       if (existingUser) {
@@ -108,7 +110,10 @@ export const UserAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   
   const login = async (data: UserLoginData): Promise<boolean> => {
     try {
-      const users = JSON.parse(localStorage.getItem('users') || '[]');
+      // Initialize users array if it doesn't exist yet
+      const existingUsersJson = localStorage.getItem('users');
+      const users = existingUsersJson ? JSON.parse(existingUsersJson) : [];
+      
       const foundUser = users.find(
         (u: any) => u.email === data.email && u.password === data.password
       );

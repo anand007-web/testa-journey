@@ -50,6 +50,7 @@ const QuizList: React.FC = () => {
     if (isAuthenticated) {
       // Load published quizzes
       const loadedQuizzes = getPublishedQuizzes();
+      console.log('Published quizzes loaded:', loadedQuizzes);
       setQuizzes(loadedQuizzes);
       
       // Load categories
