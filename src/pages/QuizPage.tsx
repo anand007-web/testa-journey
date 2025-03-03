@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -9,6 +8,9 @@ import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { useUserAuth } from '../context/UserAuthContext';
+import { Badge } from '@/components/ui/badge';
+import { CheckIcon, XIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface Question {
   id: string;
@@ -41,6 +43,7 @@ const QuizPage = () => {
   const [loading, setLoading] = useState(true);
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [timerActive, setTimerActive] = useState(false);
+  const [reviewMode, setReviewMode] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -49,7 +52,6 @@ const QuizPage = () => {
       return;
     }
 
-    // Fetch quiz data from localStorage
     const fetchQuiz = () => {
       try {
         const quizzes = JSON.parse(localStorage.getItem('quizzes') || '[]');
@@ -57,9 +59,7 @@ const QuizPage = () => {
         
         if (foundQuiz) {
           setQuiz(foundQuiz);
-          // Initialize answers array with nulls
           setAnswers(new Array(foundQuiz.questions.length).fill(null));
-          // Set timer based on number of questions (2 minutes per question)
           setTimeRemaining(foundQuiz.questions.length * 120);
           setTimerActive(true);
         } else {
@@ -77,7 +77,6 @@ const QuizPage = () => {
     fetchQuiz();
   }, [id, navigate, isAuthenticated]);
 
-  // Timer effect
   useEffect(() => {
     if (!timerActive || timeRemaining <= 0) return;
     
@@ -99,9 +98,10 @@ const QuizPage = () => {
   }, [timerActive, timeRemaining, quizCompleted]);
 
   const handleSelectAnswer = (index: number) => {
+    if (reviewMode) return;
+    
     setSelectedAnswer(index);
     
-    // Update answers array
     const newAnswers = [...answers];
     newAnswers[currentQuestionIndex] = index;
     setAnswers(newAnswers);
@@ -134,7 +134,6 @@ const QuizPage = () => {
     setTimerActive(false);
     setQuizCompleted(true);
     
-    // Calculate score
     let correctCount = 0;
     if (quiz) {
       quiz.questions.forEach((question, index) => {
@@ -147,7 +146,6 @@ const QuizPage = () => {
     const finalScore = quiz ? Math.round((correctCount / quiz.questions.length) * 100) : 0;
     setScore(finalScore);
     
-    // Save quiz attempt to user history
     if (user && quiz) {
       try {
         const quizAttempts = JSON.parse(localStorage.getItem('quiz_attempts') || '[]');
@@ -172,6 +170,11 @@ const QuizPage = () => {
         toast.error('Failed to save your quiz results');
       }
     }
+  };
+
+  const startReviewMode = () => {
+    setReviewMode(true);
+    setCurrentQuestionIndex(0);
   };
 
   const formatTime = (seconds: number): string => {
@@ -207,7 +210,7 @@ const QuizPage = () => {
     );
   }
 
-  if (quizCompleted) {
+  if (quizCompleted && !reviewMode) {
     return (
       <div className="container mx-auto p-4">
         <Card>
@@ -236,7 +239,8 @@ const QuizPage = () => {
             </div>
           </CardContent>
           <CardFooter className="flex justify-center space-x-4">
-            <Button onClick={() => navigate('/dashboard')}>Go to Dashboard</Button>
+            <Button onClick={startReviewMode} variant="default">Review Solutions</Button>
+            <Button onClick={() => navigate('/dashboard')} variant="outline">Go to Dashboard</Button>
             <Button variant="outline" onClick={() => navigate('/quizzes')}>Take Another Quiz</Button>
           </CardFooter>
         </Card>
@@ -249,10 +253,15 @@ const QuizPage = () => {
       <Card>
         <CardHeader>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-            <CardTitle className="text-xl md:text-2xl">{quiz.title}</CardTitle>
-            <div className="text-sm text-muted-foreground mt-2 md:mt-0">
-              Time Remaining: <span className={timeRemaining < 60 ? "text-red-500 font-semibold" : ""}>{formatTime(timeRemaining)}</span>
-            </div>
+            <CardTitle className="text-xl md:text-2xl">
+              {quiz.title}
+              {reviewMode && <Badge variant="outline" className="ml-2 bg-primary/10">Review Mode</Badge>}
+            </CardTitle>
+            {!reviewMode && (
+              <div className="text-sm text-muted-foreground mt-2 md:mt-0">
+                Time Remaining: <span className={timeRemaining < 60 ? "text-red-500 font-semibold" : ""}>{formatTime(timeRemaining)}</span>
+              </div>
+            )}
           </div>
           <div className="mt-4">
             <Progress value={progress} className="h-2" />
@@ -268,20 +277,52 @@ const QuizPage = () => {
             <div>
               <h3 className="text-lg font-semibold mb-4">{currentQuestion.text}</h3>
               
-              <RadioGroup value={selectedAnswer?.toString()} onValueChange={(value) => handleSelectAnswer(parseInt(value))}>
+              <RadioGroup value={selectedAnswer !== null ? selectedAnswer.toString() : undefined} onValueChange={(value) => handleSelectAnswer(parseInt(value))}>
                 <div className="space-y-3">
-                  {currentQuestion.options.map((option, index) => (
-                    <div key={index} className="flex items-center space-x-2">
-                      <RadioGroupItem value={index.toString()} id={`option-${index}`} />
-                      <Label htmlFor={`option-${index}`} className="flex-grow p-2 hover:bg-muted/50 rounded cursor-pointer">
-                        {option}
-                      </Label>
-                    </div>
-                  ))}
+                  {currentQuestion.options.map((option, index) => {
+                    const isCorrect = currentQuestion.correctAnswer === index;
+                    const isSelected = reviewMode ? answers[currentQuestionIndex] === index : selectedAnswer === index;
+                    const showCorrectness = reviewMode || (showExplanation && selectedAnswer !== null);
+                    
+                    const optionClass = cn(
+                      "flex items-center space-x-2 p-3 rounded-md",
+                      {
+                        "bg-green-50 border border-green-300": showCorrectness && isCorrect,
+                        "bg-red-50 border border-red-300": showCorrectness && !isCorrect && isSelected,
+                        "hover:bg-muted/50": !reviewMode,
+                      }
+                    );
+                    
+                    return (
+                      <div key={index} className={optionClass}>
+                        <RadioGroupItem value={index.toString()} id={`option-${index}`} disabled={reviewMode} />
+                        <Label htmlFor={`option-${index}`} className="flex-grow p-2 cursor-pointer">
+                          {option}
+                        </Label>
+                        
+                        {showCorrectness && (
+                          <>
+                            {isCorrect && (
+                              <span className="text-green-600 flex items-center gap-1">
+                                <CheckIcon size={16} />
+                                {!isSelected && reviewMode && "Correct Answer"}
+                              </span>
+                            )}
+                            {!isCorrect && isSelected && (
+                              <span className="text-red-600 flex items-center gap-1">
+                                <XIcon size={16} />
+                                Wrong
+                              </span>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </RadioGroup>
               
-              {showExplanation && currentQuestion.explanation && (
+              {(showExplanation || reviewMode) && currentQuestion.explanation && (
                 <div className="mt-6 p-4 bg-muted/50 rounded-md">
                   <h4 className="font-semibold">Explanation:</h4>
                   <p className="mt-2">{currentQuestion.explanation}</p>
@@ -309,18 +350,32 @@ const QuizPage = () => {
           </div>
           
           <div className="flex space-x-2">
-            {!showExplanation && selectedAnswer !== null && (
-              <Button variant="secondary" onClick={handleShowExplanation}>
-                Show Explanation
-              </Button>
+            {reviewMode ? (
+              currentQuestionIndex < quiz.questions.length - 1 ? (
+                <Button onClick={() => setCurrentQuestionIndex(prevIndex => prevIndex + 1)}>
+                  Next
+                </Button>
+              ) : (
+                <Button onClick={() => navigate('/dashboard')}>
+                  Finish Review
+                </Button>
+              )
+            ) : (
+              <>
+                {!showExplanation && selectedAnswer !== null && (
+                  <Button variant="secondary" onClick={handleShowExplanation}>
+                    Show Explanation
+                  </Button>
+                )}
+                
+                <Button 
+                  onClick={handleNextQuestion}
+                  disabled={selectedAnswer === null}
+                >
+                  {currentQuestionIndex < quiz.questions.length - 1 ? 'Next' : 'Finish Quiz'}
+                </Button>
+              </>
             )}
-            
-            <Button 
-              onClick={handleNextQuestion}
-              disabled={selectedAnswer === null}
-            >
-              {currentQuestionIndex < quiz.questions.length - 1 ? 'Next' : 'Finish Quiz'}
-            </Button>
           </div>
         </CardFooter>
       </Card>
