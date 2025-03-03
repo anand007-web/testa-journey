@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useUserAuth } from '@/context/UserAuthContext';
@@ -28,7 +27,6 @@ const UserDashboard: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [attempts, setAttempts] = useState<UserQuizAttempt[]>([]);
 
-  // Redirect if not authenticated
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/login');
@@ -37,15 +35,12 @@ const UserDashboard: React.FC = () => {
 
   useEffect(() => {
     if (user) {
-      // Load published quizzes
       const loadedQuizzes = getPublishedQuizzes();
       setQuizzes(loadedQuizzes);
       
-      // Load categories
       const loadedCategories = getCategories();
       setCategories(loadedCategories);
       
-      // Load user attempts
       const userAttempts = getUserQuizAttemptsById(user.id);
       setAttempts(userAttempts);
     }
@@ -91,19 +86,28 @@ const UserDashboard: React.FC = () => {
   };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).format(date);
+    try {
+      const date = new Date(dateString);
+      
+      if (isNaN(date.getTime())) {
+        return 'Invalid date';
+      }
+      
+      return new Intl.DateTimeFormat('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }).format(date);
+    } catch (error) {
+      console.error('Error formatting date:', error, 'for dateString:', dateString);
+      return 'Invalid date';
+    }
   };
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="border-b border-border">
         <div className="container mx-auto py-4 px-4 flex justify-between items-center">
           <h1 className="text-xl md:text-2xl font-bold">SSC Mock Test Dashboard</h1>
@@ -125,7 +129,6 @@ const UserDashboard: React.FC = () => {
         </div>
       </header>
 
-      {/* Main content */}
       <main className="container mx-auto py-8 px-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card>
