@@ -39,7 +39,9 @@ const defaultAuthContext: UserAuthContextType = {
 
 const UserAuthContext = createContext<UserAuthContextType>(defaultAuthContext);
 
+// Export both hooks for compatibility
 export const useUserAuth = () => useContext(UserAuthContext);
+export const useAuth = () => useContext(UserAuthContext); // Alias for backward compatibility
 
 export const UserAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);

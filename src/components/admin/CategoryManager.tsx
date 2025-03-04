@@ -27,7 +27,7 @@ const CategoryManager: React.FC = () => {
     setIsLoading(true);
     try {
       const loadedCategories = await getCategories();
-      setCategories(loadedCategories);
+      setCategories(loadedCategories as unknown as Category[]);
     } catch (error) {
       console.error('Error loading categories:', error);
       toast.error('Failed to load categories');
@@ -49,12 +49,14 @@ const CategoryManager: React.FC = () => {
     }
 
     try {
-      const category: Category = {
+      const category: any = {
         id: crypto.randomUUID(),
         name: newCategory.name,
         description: newCategory.description || null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
 
       await saveCategory(category);
@@ -93,11 +95,12 @@ const CategoryManager: React.FC = () => {
     try {
       const existingCategory = categories.find(c => c.id === editingCategoryId);
       if (existingCategory) {
-        const updatedCategory: Category = {
+        const updatedCategory: any = {
           ...existingCategory,
           name: newCategory.name,
           description: newCategory.description || null,
           updated_at: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         };
 
         await saveCategory(updatedCategory);

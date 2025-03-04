@@ -1,5 +1,5 @@
 
-import { Question, DifficultyLevel } from '@/data/questionData';
+import { Question as QuestionData, DifficultyLevel } from '@/data/questionData';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -16,12 +16,13 @@ export interface Quiz {
   title: string;
   description: string;
   categoryId: string;
-  questions: Question[];
+  questions: QuestionData[];
   timeLimit?: number; // In minutes, optional
   passingScore?: number; // Percentage, optional
   isPublished: boolean;
   createdAt: string;
   updatedAt: string;
+  user_id?: string; // Add this to match Supabase schema
 }
 
 export interface UserQuizAttempt {
@@ -103,18 +104,18 @@ export const getQuizzes = async (): Promise<Quiz[]> => {
       const quizQuestions = questionsData.filter(q => q.quiz_id === quiz.id);
       
       // For each question, find its answers
-      const questions: Question[] = quizQuestions.map(question => {
+      const questions: QuestionData[] = quizQuestions.map(question => {
         const questionAnswers = answersData.filter(a => a.question_id === question.id);
+        
+        // Find the correct answer index
+        const correctAnswerIndex = questionAnswers.findIndex(a => a.is_correct);
         
         return {
           id: question.id,
           text: question.question_text,
           explanation: question.explanation || '',
-          options: questionAnswers.map(answer => ({
-            id: answer.id,
-            text: answer.answer_text,
-            isCorrect: answer.is_correct
-          })),
+          options: questionAnswers.map(answer => answer.answer_text),
+          correctAnswer: correctAnswerIndex !== -1 ? correctAnswerIndex : 0,
           difficulty: (question.difficulty as DifficultyLevel) || 'medium',
           points: question.points || 1
         };
@@ -124,13 +125,14 @@ export const getQuizzes = async (): Promise<Quiz[]> => {
         id: quiz.id,
         title: quiz.title,
         description: quiz.description || '',
-        categoryId: quiz.category_id,
+        categoryId: quiz.category_id || '',
         questions: questions,
         timeLimit: quiz.time_limit,
         passingScore: quiz.passing_score,
         isPublished: quiz.is_published,
         createdAt: quiz.created_at,
-        updatedAt: quiz.updated_at
+        updatedAt: quiz.updated_at,
+        user_id: quiz.user_id
       };
     });
     
@@ -164,7 +166,7 @@ export const getQuizById = async (id: string): Promise<Quiz | undefined> => {
   }
 };
 
-export const saveCategory = async (category: Category): Promise<boolean> => {
+export const saveCategory = async (category: any): Promise<boolean> => {
   try {
     // Format data for Supabase
     const categoryData = {
@@ -263,19 +265,19 @@ export const saveQuiz = async (quiz: Quiz): Promise<boolean> => {
     // 2. Save questions and answers
     for (const question of quiz.questions) {
       const questionData = {
-        id: question.id,
+        id: question.id.toString(),
         quiz_id: quiz.id,
         question_text: question.text,
         difficulty: question.difficulty,
         explanation: question.explanation || null,
-        points: question.points
+        points: question.points || 1
       };
       
       // Check if question exists
       const { data: existingQuestion } = await supabase
         .from('questions')
         .select('id')
-        .eq('id', question.id)
+        .eq('id', question.id.toString())
         .single();
         
       let questionResult;
@@ -285,7 +287,7 @@ export const saveQuiz = async (quiz: Quiz): Promise<boolean> => {
         questionResult = await supabase
           .from('questions')
           .update(questionData)
-          .eq('id', question.id);
+          .eq('id', question.id.toString());
       } else {
         // Create new question
         questionResult = await supabase
@@ -300,19 +302,23 @@ export const saveQuiz = async (quiz: Quiz): Promise<boolean> => {
       }
       
       // Save answers for this question
-      for (const option of question.options) {
+      for (let i = 0; i < question.options.length; i++) {
+        const option = question.options[i];
+        const isCorrect = i === question.correctAnswer;
+        
+        const answerId = `${question.id}_${i}`;
         const answerData = {
-          id: option.id,
-          question_id: question.id,
-          answer_text: option.text,
-          is_correct: option.isCorrect
+          id: answerId,
+          question_id: question.id.toString(),
+          answer_text: option,
+          is_correct: isCorrect
         };
         
         // Check if answer exists
         const { data: existingAnswer } = await supabase
           .from('answers')
           .select('id')
-          .eq('id', option.id)
+          .eq('id', answerId)
           .single();
           
         let answerResult;
@@ -322,7 +328,7 @@ export const saveQuiz = async (quiz: Quiz): Promise<boolean> => {
           answerResult = await supabase
             .from('answers')
             .update(answerData)
-            .eq('id', option.id);
+            .eq('id', answerId);
         } else {
           // Create new answer
           answerResult = await supabase

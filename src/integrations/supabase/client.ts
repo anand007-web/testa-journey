@@ -22,6 +22,9 @@ export type Category = {
   description: string | null;
   created_at: string;
   updated_at: string;
+  // Add these fields to match the application's expected structure
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 export type Quiz = {
@@ -35,6 +38,12 @@ export type Quiz = {
   is_published: boolean;
   created_at: string;
   updated_at: string;
+  // Add these fields to match the application's expected structure
+  categoryId?: string;
+  questions?: any[];
+  isPublished?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 export type Question = {
@@ -46,6 +55,10 @@ export type Question = {
   points: number;
   created_at: string;
   updated_at: string;
+  // Add these fields to match the application's expected Question type
+  text?: string;
+  options?: any[];
+  correctAnswer?: number;
 };
 
 export type Answer = {
@@ -55,6 +68,9 @@ export type Answer = {
   is_correct: boolean;
   created_at: string;
   updated_at: string;
+  // Add these fields to match the application's expected Answer type
+  text?: string;
+  isCorrect?: boolean;
 };
 
 export type QuizAttempt = {
@@ -68,4 +84,13 @@ export type QuizAttempt = {
   skipped_questions: number;
   time_taken: number;
   completed_at: string;
+  // Add these fields to match the application's expected QuizAttempt type
+  userId?: string;
+  quizId?: string;
+  totalQuestions?: number;
+  correctAnswers?: number;
+  incorrectAnswers?: number;
+  skippedQuestions?: number;
+  timeTaken?: number;
+  completedAt?: string;
 };

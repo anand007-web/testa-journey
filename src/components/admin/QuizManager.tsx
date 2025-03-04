@@ -19,8 +19,6 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { 
-  Category, 
-  Quiz, 
   getCategories, 
   getQuizzes, 
   saveQuiz, 
@@ -42,6 +40,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Question } from '@/data/questionData';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Category, Quiz } from '@/integrations/supabase/client';
 
 interface QuizManagerProps {
   onEditQuizQuestions: (quiz: Quiz) => void;
@@ -53,10 +52,10 @@ const QuizManager: React.FC<QuizManagerProps> = ({ onEditQuizQuestions }) => {
   const [newQuiz, setNewQuiz] = useState<Partial<Quiz>>({
     title: '',
     description: '',
-    categoryId: '',
+    category_id: '',
     questions: [],
-    timeLimit: 30,
-    isPublished: false,
+    time_limit: 30,
+    is_published: false,
   });
   const [editingQuizId, setEditingQuizId] = useState<string | null>(null);
   const [selectedTab, setSelectedTab] = useState('all');
@@ -65,21 +64,26 @@ const QuizManager: React.FC<QuizManagerProps> = ({ onEditQuizQuestions }) => {
     loadData();
   }, []);
 
-  const loadData = () => {
-    const loadedCategories = getCategories();
-    const loadedQuizzes = getQuizzes();
-    setCategories(loadedCategories);
-    setQuizzes(loadedQuizzes);
+  const loadData = async () => {
+    try {
+      const loadedCategories = await getCategories();
+      const loadedQuizzes = await getQuizzes();
+      setCategories(loadedCategories as unknown as Category[]);
+      setQuizzes(loadedQuizzes as unknown as Quiz[]);
+    } catch (error) {
+      console.error("Error loading data:", error);
+      toast.error("Failed to load data. Please try again.");
+    }
   };
 
   const resetForm = () => {
     setNewQuiz({
       title: '',
       description: '',
-      categoryId: '',
+      category_id: '',
       questions: [],
-      timeLimit: 30,
-      isPublished: false,
+      time_limit: 30,
+      is_published: false,
     });
     setEditingQuizId(null);
   };
@@ -90,7 +94,7 @@ const QuizManager: React.FC<QuizManagerProps> = ({ onEditQuizQuestions }) => {
       return;
     }
 
-    if (!newQuiz.categoryId) {
+    if (!newQuiz.category_id) {
       toast.error('Please select a category');
       return;
     }
@@ -99,12 +103,12 @@ const QuizManager: React.FC<QuizManagerProps> = ({ onEditQuizQuestions }) => {
       id: crypto.randomUUID(),
       title: newQuiz.title || 'Untitled Quiz',
       description: newQuiz.description || '',
-      categoryId: newQuiz.categoryId || categories[0]?.id || '',
+      category_id: newQuiz.category_id || categories[0]?.id || '',
       questions: [],
-      timeLimit: newQuiz.timeLimit || 30,
-      isPublished: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      time_limit: newQuiz.time_limit || 30,
+      is_published: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     };
 
     saveQuiz(quiz);
@@ -125,7 +129,7 @@ const QuizManager: React.FC<QuizManagerProps> = ({ onEditQuizQuestions }) => {
       return;
     }
 
-    if (!newQuiz.categoryId) {
+    if (!newQuiz.category_id) {
       toast.error('Please select a category');
       return;
     }
@@ -136,9 +140,9 @@ const QuizManager: React.FC<QuizManagerProps> = ({ onEditQuizQuestions }) => {
         ...existingQuiz,
         title: newQuiz.title,
         description: newQuiz.description || '',
-        categoryId: newQuiz.categoryId,
-        timeLimit: newQuiz.timeLimit || existingQuiz.timeLimit || 30,
-        updatedAt: new Date().toISOString(),
+        category_id: newQuiz.category_id,
+        time_limit: newQuiz.time_limit || existingQuiz.time_limit || 30,
+        updated_at: new Date().toISOString(),
       };
 
       saveQuiz(updatedQuiz);
@@ -153,8 +157,8 @@ const QuizManager: React.FC<QuizManagerProps> = ({ onEditQuizQuestions }) => {
     setNewQuiz({
       title: quiz.title,
       description: quiz.description,
-      categoryId: quiz.categoryId,
-      timeLimit: quiz.timeLimit || 30,
+      category_id: quiz.category_id,
+      time_limit: quiz.time_limit || 30,
     });
   };
 
@@ -177,11 +181,11 @@ const QuizManager: React.FC<QuizManagerProps> = ({ onEditQuizQuestions }) => {
   const handleTogglePublish = (quiz: Quiz) => {
     const updatedQuiz: Quiz = {
       ...quiz,
-      isPublished: !quiz.isPublished,
-      updatedAt: new Date().toISOString()
+      is_published: !quiz.is_published,
+      updated_at: new Date().toISOString()
     };
     
-    if (!quiz.isPublished && quiz.questions.length === 0) {
+    if (!quiz.is_published && quiz.questions.length === 0) {
       toast.error('Cannot publish a quiz with no questions. Please add questions first.');
       return;
     }
@@ -189,9 +193,9 @@ const QuizManager: React.FC<QuizManagerProps> = ({ onEditQuizQuestions }) => {
     saveQuiz(updatedQuiz);
     loadData();
     
-    console.log(`Quiz ${updatedQuiz.id} publish status toggled to: ${updatedQuiz.isPublished}`);
+    console.log(`Quiz ${updatedQuiz.id} publish status toggled to: ${updatedQuiz.is_published}`);
     
-    if (!quiz.isPublished) {
+    if (!quiz.is_published) {
       toast.success('Quiz published successfully! Users can now access this quiz.');
     } else {
       toast.success('Quiz unpublished. Users can no longer access this quiz.');
@@ -205,8 +209,8 @@ const QuizManager: React.FC<QuizManagerProps> = ({ onEditQuizQuestions }) => {
 
   const getFilteredQuizzes = () => {
     if (selectedTab === 'all') return quizzes;
-    if (selectedTab === 'published') return quizzes.filter(q => q.isPublished);
-    if (selectedTab === 'draft') return quizzes.filter(q => !q.isPublished);
+    if (selectedTab === 'published') return quizzes.filter(q => q.is_published);
+    if (selectedTab === 'draft') return quizzes.filter(q => !q.is_published);
     return quizzes;
   };
 
@@ -246,8 +250,8 @@ const QuizManager: React.FC<QuizManagerProps> = ({ onEditQuizQuestions }) => {
             <div className="space-y-2">
               <Label htmlFor="quiz-category">Category</Label>
               <Select
-                value={newQuiz.categoryId}
-                onValueChange={(value) => setNewQuiz({ ...newQuiz, categoryId: value })}
+                value={newQuiz.category_id}
+                onValueChange={(value) => setNewQuiz({ ...newQuiz, category_id: value })}
               >
                 <SelectTrigger id="quiz-category">
                   <SelectValue placeholder="Select a category" />
@@ -270,10 +274,10 @@ const QuizManager: React.FC<QuizManagerProps> = ({ onEditQuizQuestions }) => {
                 min="1"
                 max="180"
                 placeholder="30"
-                value={newQuiz.timeLimit || ''}
+                value={newQuiz.time_limit || ''}
                 onChange={(e) => setNewQuiz({ 
                   ...newQuiz, 
-                  timeLimit: Math.max(1, Math.min(180, parseInt(e.target.value) || 30)) 
+                  time_limit: Math.max(1, Math.min(180, parseInt(e.target.value) || 30)) 
                 })}
               />
             </div>
@@ -324,15 +328,15 @@ const QuizManager: React.FC<QuizManagerProps> = ({ onEditQuizQuestions }) => {
                         <div>
                           <h3 className="text-lg font-semibold">{quiz.title}</h3>
                           <div className="flex items-center gap-2 mt-1">
-                            <Badge variant={quiz.isPublished ? "default" : "outline"}>
-                              {quiz.isPublished ? 'Published' : 'Draft'}
+                            <Badge variant={quiz.is_published ? "default" : "outline"}>
+                              {quiz.is_published ? 'Published' : 'Draft'}
                             </Badge>
                             <Badge variant="secondary">
-                              {getCategoryName(quiz.categoryId)}
+                              {getCategoryName(quiz.category_id)}
                             </Badge>
                             <span className="text-xs text-muted-foreground flex items-center">
                               <ClockIcon className="h-3 w-3 mr-1" />
-                              {quiz.timeLimit || 30} min
+                              {quiz.time_limit || 30} min
                             </span>
                             <span className="text-xs text-muted-foreground flex items-center">
                               <FileTextIcon className="h-3 w-3 mr-1" />
@@ -345,9 +349,9 @@ const QuizManager: React.FC<QuizManagerProps> = ({ onEditQuizQuestions }) => {
                             variant="ghost" 
                             size="sm"
                             onClick={() => handleTogglePublish(quiz)}
-                            title={quiz.isPublished ? 'Unpublish' : 'Publish'}
+                            title={quiz.is_published ? 'Unpublish' : 'Publish'}
                           >
-                            <CheckCircleIcon className={`h-4 w-4 ${quiz.isPublished ? 'text-green-500' : 'text-muted-foreground'}`} />
+                            <CheckCircleIcon className={`h-4 w-4 ${quiz.is_published ? 'text-green-500' : 'text-muted-foreground'}`} />
                           </Button>
                           <Button 
                             variant="ghost" 

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -6,13 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Clock, Edit, Plus, Trophy, BookOpen, CheckCircle, XCircle } from 'lucide-react';
-import { useAuth } from '@/context/UserAuthContext';
+import { useUserAuth } from '@/context/UserAuthContext';
 import { formatDistanceToNow } from 'date-fns';
 import { getQuizzes, getCategories, getUserQuizAttempts } from '@/data/quizModels';
 import { Category, Quiz, QuizAttempt } from '@/integrations/supabase/client';
 
 const UserDashboard = () => {
-  const { user } = useAuth();
+  const { user } = useUserAuth();
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [attempts, setAttempts] = useState<QuizAttempt[]>([]);
@@ -25,13 +24,13 @@ const UserDashboard = () => {
       setIsLoading(true);
       try {
         const fetchedQuizzes = await getQuizzes();
-        setQuizzes(fetchedQuizzes);
+        setQuizzes(fetchedQuizzes as unknown as Quiz[]);
         
         const fetchedCategories = await getCategories();
-        setCategories(fetchedCategories);
+        setCategories(fetchedCategories as unknown as Category[]);
         
         const fetchedAttempts = await getUserQuizAttempts(user.id);
-        setAttempts(fetchedAttempts);
+        setAttempts(fetchedAttempts as unknown as QuizAttempt[]);
       } catch (error) {
         console.error("Error loading dashboard data:", error);
       } finally {
@@ -228,7 +227,7 @@ const UserDashboard = () => {
                         <Trophy className={`h-5 w-5 ${attempt.score >= 70 ? 'text-green-500' : 'text-red-500'}`} />
                         <span className="text-xl font-bold">{attempt.score}%</span>
                       </div>
-                      <Badge variant={attempt.score >= 70 ? "success" : "destructive"}>
+                      <Badge variant={attempt.score >= 70 ? "default" : "destructive"}>
                         {attempt.score >= 70 ? 'Passed' : 'Failed'}
                       </Badge>
                     </div>

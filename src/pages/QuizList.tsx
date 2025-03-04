@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { AlertCircle, BookOpen, Clock, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useAuth } from '@/context/UserAuthContext';
+import { useUserAuth } from '@/context/UserAuthContext';
 import { getCategories, getQuizzes } from '@/data/quizModels';
 import { Category, Quiz } from '@/integrations/supabase/client';
 
@@ -18,17 +18,17 @@ const QuizList = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const { user } = useAuth();
+  const { user } = useUserAuth();
 
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
       try {
         const fetchedQuizzes = await getQuizzes();
-        setQuizzes(fetchedQuizzes);
+        setQuizzes(fetchedQuizzes as unknown as Quiz[]);
         
         const fetchedCategories = await getCategories();
-        setCategories(fetchedCategories);
+        setCategories(fetchedCategories as unknown as Category[]);
       } catch (error) {
         console.error("Error loading data:", error);
       } finally {
