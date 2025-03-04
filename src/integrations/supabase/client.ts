@@ -39,7 +39,7 @@ export type Quiz = {
   created_at: string;
   updated_at: string;
   // Add these fields to match the application's expected structure
-  categoryId?: string;
+  categoryId?: string; // Required in quizModels.ts but optional here for compatibility
   questions?: any[];
   isPublished?: boolean;
   createdAt?: string;

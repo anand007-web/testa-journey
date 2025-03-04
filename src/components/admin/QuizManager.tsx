@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,7 +24,8 @@ import {
   getQuizzes, 
   saveQuiz, 
   deleteQuiz,
-  getQuizById 
+  getQuizById,
+  Quiz as QuizModel
 } from '@/data/quizModels';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -40,16 +42,16 @@ import {
 import { Label } from '@/components/ui/label';
 import { Question } from '@/data/questionData';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Category, Quiz } from '@/integrations/supabase/client';
+import { Category, Quiz as SupabaseQuiz } from '@/integrations/supabase/client';
 
 interface QuizManagerProps {
-  onEditQuizQuestions: (quiz: Quiz) => void;
+  onEditQuizQuestions: (quiz: QuizModel) => void;
 }
 
 const QuizManager: React.FC<QuizManagerProps> = ({ onEditQuizQuestions }) => {
-  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [quizzes, setQuizzes] = useState<QuizModel[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [newQuiz, setNewQuiz] = useState<Partial<Quiz>>({
+  const [newQuiz, setNewQuiz] = useState<Partial<SupabaseQuiz>>({
     title: '',
     description: '',
     category_id: '',
@@ -69,7 +71,7 @@ const QuizManager: React.FC<QuizManagerProps> = ({ onEditQuizQuestions }) => {
       const loadedCategories = await getCategories();
       const loadedQuizzes = await getQuizzes();
       setCategories(loadedCategories as unknown as Category[]);
-      setQuizzes(loadedQuizzes as unknown as Quiz[]);
+      setQuizzes(loadedQuizzes as unknown as QuizModel[]);
     } catch (error) {
       console.error("Error loading data:", error);
       toast.error("Failed to load data. Please try again.");
@@ -99,16 +101,18 @@ const QuizManager: React.FC<QuizManagerProps> = ({ onEditQuizQuestions }) => {
       return;
     }
 
-    const quiz: Quiz = {
+    const quiz: QuizModel = {
       id: crypto.randomUUID(),
       title: newQuiz.title || 'Untitled Quiz',
       description: newQuiz.description || '',
-      category_id: newQuiz.category_id || categories[0]?.id || '',
+      categoryId: newQuiz.category_id || categories[0]?.id || '',
       questions: [],
-      time_limit: newQuiz.time_limit || 30,
-      is_published: false,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      timeLimit: newQuiz.time_limit || 30,
+      passingScore: newQuiz.passing_score || 70,
+      isPublished: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      user_id: '' // Will be set by saveQuiz with the current user
     };
 
     saveQuiz(quiz);
@@ -136,13 +140,14 @@ const QuizManager: React.FC<QuizManagerProps> = ({ onEditQuizQuestions }) => {
 
     const existingQuiz = quizzes.find(q => q.id === editingQuizId);
     if (existingQuiz) {
-      const updatedQuiz: Quiz = {
+      const updatedQuiz: QuizModel = {
         ...existingQuiz,
         title: newQuiz.title,
         description: newQuiz.description || '',
-        category_id: newQuiz.category_id,
-        time_limit: newQuiz.time_limit || existingQuiz.time_limit || 30,
-        updated_at: new Date().toISOString(),
+        categoryId: newQuiz.category_id,
+        timeLimit: newQuiz.time_limit || existingQuiz.timeLimit || 30,
+        passingScore: newQuiz.passing_score || existingQuiz.passingScore || 70,
+        updatedAt: new Date().toISOString(),
       };
 
       saveQuiz(updatedQuiz);
@@ -152,13 +157,14 @@ const QuizManager: React.FC<QuizManagerProps> = ({ onEditQuizQuestions }) => {
     }
   };
 
-  const handleEditQuiz = (quiz: Quiz) => {
+  const handleEditQuiz = (quiz: QuizModel) => {
     setEditingQuizId(quiz.id);
     setNewQuiz({
       title: quiz.title,
       description: quiz.description,
-      category_id: quiz.category_id,
-      time_limit: quiz.time_limit || 30,
+      category_id: quiz.categoryId,
+      time_limit: quiz.timeLimit || 30,
+      passing_score: quiz.passingScore || 70,
     });
   };
 
@@ -174,18 +180,18 @@ const QuizManager: React.FC<QuizManagerProps> = ({ onEditQuizQuestions }) => {
     resetForm();
   };
 
-  const handleEditQuestions = (quiz: Quiz) => {
+  const handleEditQuestions = (quiz: QuizModel) => {
     onEditQuizQuestions(quiz);
   };
 
-  const handleTogglePublish = (quiz: Quiz) => {
-    const updatedQuiz: Quiz = {
+  const handleTogglePublish = (quiz: QuizModel) => {
+    const updatedQuiz: QuizModel = {
       ...quiz,
-      is_published: !quiz.is_published,
-      updated_at: new Date().toISOString()
+      isPublished: !quiz.isPublished,
+      updatedAt: new Date().toISOString()
     };
     
-    if (!quiz.is_published && quiz.questions.length === 0) {
+    if (!quiz.isPublished && quiz.questions.length === 0) {
       toast.error('Cannot publish a quiz with no questions. Please add questions first.');
       return;
     }
@@ -193,9 +199,9 @@ const QuizManager: React.FC<QuizManagerProps> = ({ onEditQuizQuestions }) => {
     saveQuiz(updatedQuiz);
     loadData();
     
-    console.log(`Quiz ${updatedQuiz.id} publish status toggled to: ${updatedQuiz.is_published}`);
+    console.log(`Quiz ${updatedQuiz.id} publish status toggled to: ${updatedQuiz.isPublished}`);
     
-    if (!quiz.is_published) {
+    if (!quiz.isPublished) {
       toast.success('Quiz published successfully! Users can now access this quiz.');
     } else {
       toast.success('Quiz unpublished. Users can no longer access this quiz.');
@@ -209,8 +215,8 @@ const QuizManager: React.FC<QuizManagerProps> = ({ onEditQuizQuestions }) => {
 
   const getFilteredQuizzes = () => {
     if (selectedTab === 'all') return quizzes;
-    if (selectedTab === 'published') return quizzes.filter(q => q.is_published);
-    if (selectedTab === 'draft') return quizzes.filter(q => !q.is_published);
+    if (selectedTab === 'published') return quizzes.filter(q => q.isPublished);
+    if (selectedTab === 'draft') return quizzes.filter(q => !q.isPublished);
     return quizzes;
   };
 

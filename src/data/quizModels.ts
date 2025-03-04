@@ -1,4 +1,3 @@
-
 import { Question as QuestionData, DifficultyLevel } from '@/data/questionData';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -111,7 +110,7 @@ export const getQuizzes = async (): Promise<Quiz[]> => {
         const correctAnswerIndex = questionAnswers.findIndex(a => a.is_correct);
         
         return {
-          id: question.id,
+          id: parseInt(question.id.toString()),
           text: question.question_text,
           explanation: question.explanation || '',
           options: questionAnswers.map(answer => answer.answer_text),
