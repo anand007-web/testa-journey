@@ -1,3 +1,4 @@
+
 import { Question as QuestionData, DifficultyLevel } from '@/data/questionData';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -251,7 +252,7 @@ export const saveQuiz = async (quiz: Quiz): Promise<boolean> => {
         question_text: question.text,
         difficulty: question.difficulty,
         explanation: question.explanation || null,
-        points: question.points || 1
+        points: question.points || 1  // Default to 1 if points not provided
       };
       
       const { data: existingQuestion } = await supabase

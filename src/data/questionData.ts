@@ -9,6 +9,7 @@ export interface Question {
   explanation: string;
   difficulty: DifficultyLevel;
   category?: string;
+  points?: number; // Add points as an optional property
 }
 
 export const questions: Question[] = [
