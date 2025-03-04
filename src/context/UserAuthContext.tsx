@@ -81,9 +81,10 @@ export const UserAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
   }, []);
   
-  // Enhanced registration function with Supabase
+  // Modified registration function without email verification
   const register = async (data: UserRegistrationData): Promise<boolean> => {
     try {
+      // Using signUp with autoConfirm option via the meta data
       const { data: authData, error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -91,6 +92,7 @@ export const UserAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           data: {
             username: data.username,
           },
+          // The emailRedirectTo is not needed since we're not verifying email
         },
       });
       
@@ -100,8 +102,23 @@ export const UserAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return false;
       }
       
+      // If we have a user, registration was successful
       if (authData.user) {
-        toast.success('Registration successful! Check your email for confirmation.');
+        toast.success('Registration successful! You can now log in with your credentials.');
+        
+        // Auto-login the user after registration
+        const { error: loginError } = await supabase.auth.signInWithPassword({
+          email: data.email,
+          password: data.password,
+        });
+        
+        if (loginError) {
+          console.error('Error auto-logging in after registration:', loginError.message);
+          // Even if auto-login fails, registration was successful
+          return true;
+        }
+        
+        toast.success('You are now logged in!');
         return true;
       }
       
