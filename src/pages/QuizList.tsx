@@ -1,241 +1,159 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useUserAuth } from '@/context/UserAuthContext';
-import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
-  LogOutIcon, 
-  FileTextIcon, 
-  SearchIcon, 
-  TimerIcon, 
-  TagIcon, 
-  ArrowLeftIcon,
-  UserIcon
-} from 'lucide-react';
-import { Quiz, getPublishedQuizzes, Category, getCategories, getQuizzes } from '@/data/quizModels';
+import { AlertCircle, BookOpen, Clock, Filter } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { toast } from 'sonner';
+import { useAuth } from '@/context/UserAuthContext';
+import { getCategories, getQuizzes } from '@/data/quizModels';
+import { Category, Quiz } from '@/integrations/supabase/client';
 
-const QuizList: React.FC = () => {
-  const navigate = useNavigate();
-  const { user, isAuthenticated, logout } = useUserAuth();
+const QuizList = () => {
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('all');
   const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const { user } = useAuth();
 
-  // Enhanced authentication check with redirect and notification
   useEffect(() => {
-    const checkAuth = () => {
-      if (!isAuthenticated) {
-        toast.error('Please log in to view quizzes', {
-          description: 'You need to be logged in to access this page'
-        });
-        navigate('/login', { state: { from: '/quizzes' } });
-      } else {
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        const fetchedQuizzes = await getQuizzes();
+        setQuizzes(fetchedQuizzes);
+        
+        const fetchedCategories = await getCategories();
+        setCategories(fetchedCategories);
+      } catch (error) {
+        console.error("Error loading data:", error);
+      } finally {
         setIsLoading(false);
       }
     };
     
-    // Short timeout to ensure auth state is loaded
-    const timer = setTimeout(checkAuth, 300);
-    return () => clearTimeout(timer);
-  }, [isAuthenticated, navigate]);
+    loadData();
+  }, []);
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      // Check both published and all quizzes for debugging
-      const allQuizzes = getQuizzes();
-      console.log("All quizzes in system:", allQuizzes.length);
-      console.log("All quizzes published status:", allQuizzes.map(q => ({ id: q.id, title: q.title, published: q.isPublished })));
-      
-      // Load published quizzes
-      const loadedQuizzes = getPublishedQuizzes();
-      console.log('Published quizzes loaded for display:', loadedQuizzes.length);
-      setQuizzes(loadedQuizzes);
-      
-      // Load categories
-      const loadedCategories = getCategories();
-      setCategories(loadedCategories);
-      setIsLoading(false);
-    }
-  }, [isAuthenticated]);
+  const filteredQuizzes = quizzes
+    .filter(quiz => quiz.is_published)
+    .filter(quiz => quiz.title.toLowerCase().includes(searchTerm.toLowerCase()))
+    .filter(quiz => selectedCategory === 'all' || quiz.category_id === selectedCategory);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
-
-  const getCategoryName = (categoryId: string) => {
+  const getCategoryName = (categoryId: string | null) => {
+    if (!categoryId) return 'Uncategorized';
     const category = categories.find(c => c.id === categoryId);
     return category ? category.name : 'Uncategorized';
   };
 
-  const getFilteredQuizzes = () => {
-    let filteredQuizzes = [...quizzes];
-    
-    // Apply category filter
-    if (categoryFilter !== 'all') {
-      filteredQuizzes = filteredQuizzes.filter(quiz => quiz.categoryId === categoryFilter);
-    }
-    
-    // Apply search filter
-    if (searchQuery) {
-      filteredQuizzes = filteredQuizzes.filter(quiz => 
-        quiz.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        quiz.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        getCategoryName(quiz.categoryId).toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-    
-    return filteredQuizzes;
-  };
+  return (
+    <div className="container max-w-5xl mx-auto py-8 px-4">
+      <div className="mb-8 text-center">
+        <h1 className="text-3xl font-bold mb-2">Available Quizzes</h1>
+        <p className="text-muted-foreground max-w-2xl mx-auto">
+          Browse through our collection of quizzes across various categories. Test your knowledge and challenge yourself!
+        </p>
+      </div>
 
-  // Show loading state when checking authentication
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading quizzes...</p>
+      <div className="flex flex-col md:flex-row gap-4 mb-6 items-end">
+        <div className="flex-1">
+          <Label htmlFor="search">Search Quizzes</Label>
+          <div className="relative">
+            <Input
+              id="search"
+              placeholder="Search by title..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="pl-8"
+            />
+            <span className="absolute left-2.5 top-2.5 text-muted-foreground">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            </span>
+          </div>
+        </div>
+
+        <div>
+          <Label htmlFor="category-filter">Filter by Category</Label>
+          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <SelectTrigger className="w-[180px]" id="category-filter">
+              <SelectValue placeholder="Select category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              {categories.map(category => (
+                <SelectItem key={category.id} value={category.id}>
+                  {category.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
-    );
-  }
 
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border">
-        <div className="container mx-auto py-4 px-4 flex justify-between items-center">
-          <h1 className="text-xl md:text-2xl font-bold">SSC Mock Tests</h1>
-          <div className="flex items-center gap-2">
-            {user && (
-              <div className="hidden md:flex items-center gap-2 mr-4">
-                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                  <UserIcon className="h-4 w-4" />
-                </div>
-                <span className="text-sm font-medium">{user.username}</span>
-              </div>
-            )}
-            <Button variant="ghost" size="sm" asChild className="mr-2">
-              <Link to="/dashboard">
-                <ArrowLeftIcon className="mr-2 h-4 w-4" />
-                Dashboard
-              </Link>
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleLogout}>
-              <LogOutIcon className="mr-2 h-4 w-4" />
-              <span className="hidden sm:inline">Logout</span>
-            </Button>
-          </div>
+      {isLoading ? (
+        <div className="text-center py-12">
+          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading quizzes...</p>
         </div>
-      </header>
-
-      {/* Main content */}
-      <main className="container mx-auto py-8 px-4">
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold mb-4">Browse Mock Tests</h2>
-          
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 relative">
-              <SearchIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search quizzes by title or description..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            
-            <div className="w-full md:w-64">
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger>
-                  <div className="flex items-center">
-                    <TagIcon className="mr-2 h-4 w-4" />
-                    <SelectValue placeholder="Filter by category" />
+      ) : filteredQuizzes.length > 0 ? (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {filteredQuizzes.map(quiz => (
+            <Link key={quiz.id} to={`/quiz/${quiz.id}`} className="transition-transform hover:scale-[1.02]">
+              <Card className="h-full flex flex-col overflow-hidden border-2 hover:border-primary">
+                <CardHeader className="pb-2">
+                  <div className="flex justify-between items-start">
+                    <Badge variant="outline" className="mb-2">
+                      {getCategoryName(quiz.category_id)}
+                    </Badge>
+                    {quiz.time_limit && (
+                      <div className="flex items-center text-sm text-muted-foreground gap-1">
+                        <Clock size={14} />
+                        <span>{quiz.time_limit} min</span>
+                      </div>
+                    )}
                   </div>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {getFilteredQuizzes().length > 0 ? (
-            getFilteredQuizzes().map((quiz) => (
-              <Card key={quiz.id}>
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <Badge className="mb-2">{getCategoryName(quiz.categoryId)}</Badge>
-                      <CardTitle>{quiz.title}</CardTitle>
-                    </div>
-                  </div>
+                  <CardTitle className="line-clamp-2">{quiz.title}</CardTitle>
+                  <CardDescription className="line-clamp-2">
+                    {quiz.description || "No description available"}
+                  </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    {quiz.description || 'No description provided'}
-                  </p>
-                  
-                  <div className="flex gap-4">
-                    <div className="flex items-center gap-1 text-sm">
-                      <FileTextIcon className="h-4 w-4 text-muted-foreground" />
-                      <span>{quiz.questions.length} questions</span>
+                <CardContent className="flex-grow">
+                  <div className="flex justify-between items-center mt-auto pt-4">
+                    <div className="flex items-center text-sm">
+                      <BookOpen size={16} className="mr-1.5" />
+                      <span>Begin Quiz</span>
                     </div>
-                    <div className="flex items-center gap-1 text-sm">
-                      <TimerIcon className="h-4 w-4 text-muted-foreground" />
-                      <span>{quiz.timeLimit || 30} min</span>
-                    </div>
+                    {quiz.passing_score && (
+                      <div className="text-sm text-muted-foreground">
+                        Pass: {quiz.passing_score}%
+                      </div>
+                    )}
                   </div>
                 </CardContent>
-                <CardFooter>
-                  <Button asChild className="w-full">
-                    <Link to={`/quiz/${quiz.id}`}>
-                      Start Quiz
-                    </Link>
-                  </Button>
-                </CardFooter>
               </Card>
-            ))
-          ) : (
-            <div className="col-span-full text-center py-12 border rounded-lg">
-              <FileTextIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium mb-2">No Quizzes Found</h3>
-              <p className="text-muted-foreground">
-                {searchQuery || categoryFilter !== 'all'
-                  ? 'No quizzes match your search criteria. Try adjusting your filters.'
-                  : 'There are no quizzes available at the moment. Please check back later.'}
-              </p>
-              
-              {(searchQuery || categoryFilter !== 'all') && (
-                <Button 
-                  variant="link" 
-                  onClick={() => {
-                    setSearchQuery('');
-                    setCategoryFilter('all');
-                  }}
-                  className="mt-2"
-                >
-                  Clear Filters
-                </Button>
-              )}
-            </div>
+            </Link>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-12 border rounded-lg bg-muted/20">
+          <AlertCircle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+          <h3 className="text-lg font-medium mb-2">No quizzes found</h3>
+          <p className="text-muted-foreground max-w-sm mx-auto">
+            {searchTerm || selectedCategory !== 'all' 
+              ? "Try adjusting your search or filter criteria."
+              : "There are currently no published quizzes available."}
+          </p>
+          {user && (
+            <Button asChild className="mt-4">
+              <Link to="/dashboard">Go to Dashboard</Link>
+            </Button>
           )}
         </div>
-      </main>
+      )}
     </div>
   );
 };

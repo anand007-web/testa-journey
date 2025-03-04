@@ -5,9 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Category, getCategories, saveCategory } from '@/data/quizModels';
+import { getCategories, saveCategory } from '@/data/quizModels';
 import { Badge } from '@/components/ui/badge';
 import { PlusCircleIcon, EditIcon, SaveIcon, XIcon } from 'lucide-react';
+import { Category } from '@/integrations/supabase/client';
 
 const CategoryManager: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -16,17 +17,26 @@ const CategoryManager: React.FC = () => {
     description: '',
   });
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     loadCategories();
   }, []);
 
-  const loadCategories = () => {
-    const loadedCategories = getCategories();
-    setCategories(loadedCategories);
+  const loadCategories = async () => {
+    setIsLoading(true);
+    try {
+      const loadedCategories = await getCategories();
+      setCategories(loadedCategories);
+    } catch (error) {
+      console.error('Error loading categories:', error);
+      toast.error('Failed to load categories');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleAddCategory = () => {
+  const handleAddCategory = async () => {
     if (!newCategory.name) {
       toast.error('Category name is required');
       return;
@@ -38,18 +48,23 @@ const CategoryManager: React.FC = () => {
       return;
     }
 
-    const category: Category = {
-      id: crypto.randomUUID(),
-      name: newCategory.name,
-      description: newCategory.description || '',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    try {
+      const category: Category = {
+        id: crypto.randomUUID(),
+        name: newCategory.name,
+        description: newCategory.description || null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
-    saveCategory(category);
-    setNewCategory({ name: '', description: '' });
-    loadCategories();
-    toast.success('Category added successfully');
+      await saveCategory(category);
+      setNewCategory({ name: '', description: '' });
+      await loadCategories();
+      toast.success('Category added successfully');
+    } catch (error) {
+      console.error('Error adding category:', error);
+      toast.error('Failed to add category');
+    }
   };
 
   const handleEditCategory = (category: Category) => {
@@ -60,7 +75,7 @@ const CategoryManager: React.FC = () => {
     });
   };
 
-  const handleUpdateCategory = () => {
+  const handleUpdateCategory = async () => {
     if (!newCategory.name || !editingCategoryId) {
       toast.error('Category name is required');
       return;
@@ -75,20 +90,25 @@ const CategoryManager: React.FC = () => {
       return;
     }
 
-    const existingCategory = categories.find(c => c.id === editingCategoryId);
-    if (existingCategory) {
-      const updatedCategory: Category = {
-        ...existingCategory,
-        name: newCategory.name,
-        description: newCategory.description || '',
-        updatedAt: new Date().toISOString(),
-      };
+    try {
+      const existingCategory = categories.find(c => c.id === editingCategoryId);
+      if (existingCategory) {
+        const updatedCategory: Category = {
+          ...existingCategory,
+          name: newCategory.name,
+          description: newCategory.description || null,
+          updated_at: new Date().toISOString(),
+        };
 
-      saveCategory(updatedCategory);
-      setNewCategory({ name: '', description: '' });
-      setEditingCategoryId(null);
-      loadCategories();
-      toast.success('Category updated successfully');
+        await saveCategory(updatedCategory);
+        setNewCategory({ name: '', description: '' });
+        setEditingCategoryId(null);
+        await loadCategories();
+        toast.success('Category updated successfully');
+      }
+    } catch (error) {
+      console.error('Error updating category:', error);
+      toast.error('Failed to update category');
     }
   };
 
@@ -154,7 +174,9 @@ const CategoryManager: React.FC = () => {
           <div>
             <h3 className="text-lg font-medium mb-3">Existing Categories</h3>
             <div className="space-y-2">
-              {categories.length > 0 ? (
+              {isLoading ? (
+                <p className="text-center py-4 text-muted-foreground">Loading categories...</p>
+              ) : categories.length > 0 ? (
                 categories.map((category) => (
                   <div 
                     key={category.id} 

@@ -1,6 +1,7 @@
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface Admin {
   id: string;
@@ -12,7 +13,7 @@ interface AdminAuthContextType {
   admin: Admin | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (username: string, password: string) => boolean;
+  login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
 }
 
@@ -20,7 +21,7 @@ const defaultContext: AdminAuthContextType = {
   admin: null,
   isAuthenticated: false,
   isLoading: true,
-  login: () => false,
+  login: async () => false,
   logout: () => {},
 };
 
@@ -47,27 +48,31 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setIsLoading(false);
   }, []);
   
-  const login = (username: string, password: string): boolean => {
-    // We'll call our Supabase Edge Function for admin authentication
+  const login = async (username: string, password: string): Promise<boolean> => {
     try {
-      // For now we'll simulate the edge function call since it's being deployed
-      // In a real implementation, we would call the edge function
+      // Call our Supabase Edge Function for admin authentication
+      const { data, error } = await supabase.functions.invoke('admin-auth', {
+        body: { username, password },
+      });
       
-      if (username === 'admin' && password === 'admin123') {
-        const adminData = {
-          id: 'admin-1',
-          username: 'admin',
-          role: 'admin',
-        };
-        
+      if (error) {
+        console.error('Admin auth function error:', error);
+        toast.error('Authentication failed');
+        return false;
+      }
+      
+      if (data?.success && data?.admin) {
+        const adminData = data.admin;
         setAdmin(adminData);
         localStorage.setItem('admin_auth', JSON.stringify(adminData));
         return true;
+      } else {
+        toast.error(data?.error || 'Invalid credentials');
+        return false;
       }
-      
-      return false;
     } catch (error) {
       console.error('Admin login error:', error);
+      toast.error('Authentication failed');
       return false;
     }
   };
@@ -75,6 +80,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const logout = () => {
     setAdmin(null);
     localStorage.removeItem('admin_auth');
+    toast.success('Logged out successfully');
   };
   
   return (
