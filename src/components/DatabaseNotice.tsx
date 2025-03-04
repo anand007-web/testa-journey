@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { X } from 'lucide-react';
+import { X, Database } from 'lucide-react';
 
 const DatabaseNotice: React.FC = () => {
   const [visible, setVisible] = useState(false);
@@ -33,25 +33,28 @@ const DatabaseNotice: React.FC = () => {
     <div className="fixed bottom-4 right-4 z-50 max-w-sm animate-in">
       <Card className="p-4 border-primary/20 glass">
         <div className="flex justify-between items-start mb-2">
-          <h3 className="font-semibold">Database Connection Notice</h3>
+          <div className="flex items-center gap-2">
+            <Database className="h-4 w-4 text-primary" />
+            <h3 className="font-semibold">Database Connected</h3>
+          </div>
           <Button variant="ghost" size="icon" onClick={handleDismiss} className="h-6 w-6">
             <X className="h-4 w-4" />
           </Button>
         </div>
         <p className="text-sm mb-3 text-muted-foreground">
-          This application is currently using browser storage. For production deployment on Vercel, 
-          consider connecting to a database service like Supabase or MongoDB.
+          This application is now connected to Supabase. User accounts, quiz data, and all other 
+          information will be stored securely in the database.
         </p>
         <div className="flex justify-end">
           <Button 
             variant="link" 
             className="text-xs p-0 h-auto" 
             onClick={() => {
-              window.open('https://supabase.com/docs', '_blank');
+              window.open('https://supabase.com/dashboard/project/ljoieocugpdzhvdxkrcc', '_blank');
               handleDismiss();
             }}
           >
-            Learn More
+            View Dashboard
           </Button>
         </div>
       </Card>

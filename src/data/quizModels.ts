@@ -1,6 +1,7 @@
 
 import { Question, DifficultyLevel } from '@/data/questionData';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface Category {
   id: string;
@@ -36,241 +37,407 @@ export interface UserQuizAttempt {
   completedAt: string;
 }
 
-// Initial default categories
-export const defaultCategories: Category[] = [
-  {
-    id: '1',
-    name: 'General Knowledge',
-    description: 'Questions about general knowledge',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: '2',
-    name: 'Mathematics',
-    description: 'Questions about mathematics',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: '3',
-    name: 'English',
-    description: 'Questions about English language',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: '4',
-    name: 'Reasoning',
-    description: 'Questions about logical reasoning',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-];
-
-// Helper functions for quiz management
-export const getCategories = (): Category[] => {
+// Helper functions for quiz management using Supabase
+export const getCategories = async (): Promise<Category[]> => {
   try {
-    const categories = localStorage.getItem('quiz_categories');
-    if (!categories) {
-      // If no categories exist, initialize with defaults and save
-      localStorage.setItem('quiz_categories', JSON.stringify(defaultCategories));
-      return defaultCategories;
+    const { data, error } = await supabase
+      .from('categories')
+      .select('*')
+      .order('name');
+      
+    if (error) {
+      console.error('Error getting categories:', error);
+      toast.error('Failed to fetch categories');
+      return [];
     }
-    return JSON.parse(categories);
+    
+    // Transform the data to match our interface
+    return data.map(category => ({
+      id: category.id,
+      name: category.name,
+      description: category.description,
+      createdAt: category.created_at,
+      updatedAt: category.updated_at
+    }));
   } catch (error) {
     console.error('Error getting categories:', error);
-    return defaultCategories;
+    return [];
   }
 };
 
-// Warning for localStorage vs database in production
-const showDatabaseWarning = (() => {
-  let hasShown = false;
-  
-  return () => {
-    if (!hasShown) {
-      console.warn("Using localStorage for data persistence. For production use, consider implementing a database solution.");
-      toast.warning("This is a demo version using browser storage. In production, connect to a database for data persistence.", {
-        duration: 5000,
-        id: "database-warning"
-      });
-      hasShown = true;
-    }
-  };
-})();
-
-export const getQuizzes = (): Quiz[] => {
+export const getQuizzes = async (): Promise<Quiz[]> => {
   try {
-    showDatabaseWarning();
-    
-    const quizzes = localStorage.getItem('quizzes');
-    if (!quizzes) {
-      // If no quizzes exist, initialize with empty array and save
-      localStorage.setItem('quizzes', JSON.stringify([]));
+    const { data: quizzesData, error: quizzesError } = await supabase
+      .from('quizzes')
+      .select('*')
+      .order('created_at', { ascending: false });
+      
+    if (quizzesError) {
+      console.error('Error getting quizzes:', quizzesError);
+      toast.error('Failed to fetch quizzes');
       return [];
     }
-    const parsedQuizzes = JSON.parse(quizzes);
-    console.log('Retrieved quizzes from localStorage:', parsedQuizzes.length);
-    return parsedQuizzes;
+    
+    // Fetch all questions and answers in batch operations
+    const { data: questionsData, error: questionsError } = await supabase
+      .from('questions')
+      .select('*');
+      
+    if (questionsError) {
+      console.error('Error getting questions:', questionsError);
+      return [];
+    }
+    
+    const { data: answersData, error: answersError } = await supabase
+      .from('answers')
+      .select('*');
+      
+    if (answersError) {
+      console.error('Error getting answers:', answersError);
+      return [];
+    }
+    
+    // Transform data to match our interfaces
+    const quizzes = quizzesData.map(quiz => {
+      // Find all questions for this quiz
+      const quizQuestions = questionsData.filter(q => q.quiz_id === quiz.id);
+      
+      // For each question, find its answers
+      const questions: Question[] = quizQuestions.map(question => {
+        const questionAnswers = answersData.filter(a => a.question_id === question.id);
+        
+        return {
+          id: question.id,
+          text: question.question_text,
+          explanation: question.explanation || '',
+          options: questionAnswers.map(answer => ({
+            id: answer.id,
+            text: answer.answer_text,
+            isCorrect: answer.is_correct
+          })),
+          difficulty: (question.difficulty as DifficultyLevel) || 'medium',
+          points: question.points || 1
+        };
+      });
+      
+      return {
+        id: quiz.id,
+        title: quiz.title,
+        description: quiz.description || '',
+        categoryId: quiz.category_id,
+        questions: questions,
+        timeLimit: quiz.time_limit,
+        passingScore: quiz.passing_score,
+        isPublished: quiz.is_published,
+        createdAt: quiz.created_at,
+        updatedAt: quiz.updated_at
+      };
+    });
+    
+    console.log('Retrieved quizzes from Supabase:', quizzes.length);
+    return quizzes;
   } catch (error) {
     console.error('Error getting quizzes:', error);
     return [];
   }
 };
 
-export const getPublishedQuizzes = (): Quiz[] => {
-  const quizzes = getQuizzes();
-  const published = quizzes.filter(quiz => quiz.isPublished === true);
-  console.log('Retrieved all quizzes:', quizzes.length);
-  console.log('Retrieved published quizzes:', published.length);
-  console.log('Published quiz IDs:', published.map(q => q.id));
-  return published;
-};
-
-export const getQuizById = (id: string): Quiz | undefined => {
-  const quizzes = getQuizzes();
-  return quizzes.find(quiz => quiz.id === id);
-};
-
-export const saveCategory = (category: Category): void => {
+export const getPublishedQuizzes = async (): Promise<Quiz[]> => {
   try {
-    showDatabaseWarning();
+    const quizzes = await getQuizzes();
+    const published = quizzes.filter(quiz => quiz.isPublished === true);
+    console.log('Retrieved published quizzes:', published.length);
+    return published;
+  } catch (error) {
+    console.error('Error getting published quizzes:', error);
+    return [];
+  }
+};
+
+export const getQuizById = async (id: string): Promise<Quiz | undefined> => {
+  try {
+    const quizzes = await getQuizzes();
+    return quizzes.find(quiz => quiz.id === id);
+  } catch (error) {
+    console.error('Error getting quiz by ID:', error);
+    return undefined;
+  }
+};
+
+export const saveCategory = async (category: Category): Promise<boolean> => {
+  try {
+    // Format data for Supabase
+    const categoryData = {
+      id: category.id,
+      name: category.name,
+      description: category.description || null
+    };
     
-    const categories = getCategories();
-    const existingIndex = categories.findIndex(c => c.id === category.id);
+    // Check if category exists
+    const { data: existingCategory } = await supabase
+      .from('categories')
+      .select('id')
+      .eq('id', category.id)
+      .single();
+      
+    let result;
     
-    if (existingIndex >= 0) {
+    if (existingCategory) {
       // Update existing category
-      categories[existingIndex] = {
-        ...category,
-        updatedAt: new Date().toISOString(),
-      };
+      result = await supabase
+        .from('categories')
+        .update(categoryData)
+        .eq('id', category.id);
     } else {
-      // Add new category
-      categories.push({
-        ...category,
-        id: category.id || crypto.randomUUID(),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      });
+      // Create new category
+      result = await supabase
+        .from('categories')
+        .insert(categoryData);
     }
     
-    localStorage.setItem('quiz_categories', JSON.stringify(categories));
+    if (result.error) {
+      console.error('Error saving category:', result.error);
+      toast.error('Failed to save category');
+      return false;
+    }
+    
+    return true;
   } catch (error) {
     console.error('Error saving category:', error);
+    toast.error('Failed to save category');
+    return false;
   }
 };
 
-export const saveQuiz = (quiz: Quiz): void => {
+export const saveQuiz = async (quiz: Quiz): Promise<boolean> => {
   try {
-    showDatabaseWarning();
+    // Begin a transaction using multiple operations
+    // 1. Save quiz data
+    const quizData = {
+      id: quiz.id,
+      title: quiz.title,
+      description: quiz.description || null,
+      category_id: quiz.categoryId,
+      time_limit: quiz.timeLimit || null,
+      passing_score: quiz.passingScore || null,
+      is_published: quiz.isPublished,
+      // Supabase automatically handles created_at and updated_at
+    };
     
-    const quizzes = getQuizzes();
-    const existingIndex = quizzes.findIndex(q => q.id === quiz.id);
+    // Check if quiz exists
+    const { data: existingQuiz } = await supabase
+      .from('quizzes')
+      .select('id')
+      .eq('id', quiz.id)
+      .single();
     
-    if (existingIndex >= 0) {
+    let quizResult;
+    
+    if (existingQuiz) {
       // Update existing quiz
-      quizzes[existingIndex] = {
-        ...quiz,
-        updatedAt: new Date().toISOString(),
-      };
-      console.log(`Updated existing quiz: ${quiz.title} (ID: ${quiz.id}), Published: ${quiz.isPublished}`);
+      quizResult = await supabase
+        .from('quizzes')
+        .update(quizData)
+        .eq('id', quiz.id);
     } else {
-      // Add new quiz
-      quizzes.push({
-        ...quiz,
-        id: quiz.id || crypto.randomUUID(),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      });
-      console.log(`Added new quiz: ${quiz.title} (ID: ${quiz.id}), Published: ${quiz.isPublished}`);
+      // Create new quiz with a user_id 
+      // This assumes the user is authenticated; we get the user ID from the auth context
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData || !userData.user) {
+        toast.error('You must be logged in to create a quiz');
+        return false;
+      }
+      
+      quizData.user_id = userData.user.id;
+      quizResult = await supabase
+        .from('quizzes')
+        .insert(quizData);
     }
     
-    localStorage.setItem('quizzes', JSON.stringify(quizzes));
-    console.log(`Saved ${quizzes.length} quizzes to localStorage`);
+    if (quizResult.error) {
+      console.error('Error saving quiz:', quizResult.error);
+      toast.error('Failed to save quiz');
+      return false;
+    }
+    
+    // 2. Save questions and answers
+    for (const question of quiz.questions) {
+      const questionData = {
+        id: question.id,
+        quiz_id: quiz.id,
+        question_text: question.text,
+        difficulty: question.difficulty,
+        explanation: question.explanation || null,
+        points: question.points
+      };
+      
+      // Check if question exists
+      const { data: existingQuestion } = await supabase
+        .from('questions')
+        .select('id')
+        .eq('id', question.id)
+        .single();
+        
+      let questionResult;
+      
+      if (existingQuestion) {
+        // Update existing question
+        questionResult = await supabase
+          .from('questions')
+          .update(questionData)
+          .eq('id', question.id);
+      } else {
+        // Create new question
+        questionResult = await supabase
+          .from('questions')
+          .insert(questionData);
+      }
+      
+      if (questionResult.error) {
+        console.error('Error saving question:', questionResult.error);
+        toast.error('Failed to save question');
+        return false;
+      }
+      
+      // Save answers for this question
+      for (const option of question.options) {
+        const answerData = {
+          id: option.id,
+          question_id: question.id,
+          answer_text: option.text,
+          is_correct: option.isCorrect
+        };
+        
+        // Check if answer exists
+        const { data: existingAnswer } = await supabase
+          .from('answers')
+          .select('id')
+          .eq('id', option.id)
+          .single();
+          
+        let answerResult;
+        
+        if (existingAnswer) {
+          // Update existing answer
+          answerResult = await supabase
+            .from('answers')
+            .update(answerData)
+            .eq('id', option.id);
+        } else {
+          // Create new answer
+          answerResult = await supabase
+            .from('answers')
+            .insert(answerData);
+        }
+        
+        if (answerResult.error) {
+          console.error('Error saving answer:', answerResult.error);
+          toast.error('Failed to save answer');
+          return false;
+        }
+      }
+    }
+    
+    console.log(`Saved quiz: ${quiz.title} (ID: ${quiz.id}), Published: ${quiz.isPublished}`);
+    return true;
   } catch (error) {
     console.error('Error saving quiz:', error);
-    toast.error("Failed to save quiz. Please try again.");
+    toast.error('Failed to save quiz. Please try again.');
+    return false;
   }
 };
 
-export const deleteQuiz = (id: string): void => {
+export const deleteQuiz = async (id: string): Promise<boolean> => {
   try {
-    showDatabaseWarning();
+    // Due to cascading deletes, we only need to delete the quiz
+    const { error } = await supabase
+      .from('quizzes')
+      .delete()
+      .eq('id', id);
+      
+    if (error) {
+      console.error('Error deleting quiz:', error);
+      toast.error('Failed to delete quiz');
+      return false;
+    }
     
-    const quizzes = getQuizzes();
-    const updatedQuizzes = quizzes.filter(quiz => quiz.id !== id);
-    localStorage.setItem('quizzes', JSON.stringify(updatedQuizzes));
-    toast.success("Quiz deleted successfully");
+    toast.success('Quiz deleted successfully');
+    return true;
   } catch (error) {
     console.error('Error deleting quiz:', error);
-    toast.error("Failed to delete quiz. Please try again.");
+    toast.error('Failed to delete quiz. Please try again.');
+    return false;
   }
 };
 
-export const saveUserQuizAttempt = (attempt: UserQuizAttempt): void => {
+export const saveUserQuizAttempt = async (attempt: UserQuizAttempt): Promise<boolean> => {
   try {
-    showDatabaseWarning();
+    const attemptData = {
+      id: attempt.id,
+      user_id: attempt.userId,
+      quiz_id: attempt.quizId,
+      score: attempt.score,
+      total_questions: attempt.totalQuestions,
+      correct_answers: attempt.correctAnswers,
+      incorrect_answers: attempt.incorrectAnswers,
+      skipped_questions: attempt.skippedQuestions,
+      time_taken: attempt.timeTaken
+      // completed_at is handled automatically
+    };
     
-    const attempts = getUserQuizAttempts();
-    attempts.push({
-      ...attempt,
-      id: attempt.id || crypto.randomUUID(),
-    });
-    localStorage.setItem('quiz_attempts', JSON.stringify(attempts));
+    const { error } = await supabase
+      .from('quiz_attempts')
+      .insert(attemptData);
+      
+    if (error) {
+      console.error('Error saving quiz attempt:', error);
+      toast.error('Failed to save your quiz attempt');
+      return false;
+    }
+    
     console.log(`Saved quiz attempt for user ${attempt.userId}, quiz ${attempt.quizId}, score: ${attempt.score}%`);
+    return true;
   } catch (error) {
     console.error('Error saving quiz attempt:', error);
-    toast.error("Failed to save your quiz attempt. Your progress might not be recorded.");
+    toast.error('Failed to save your quiz attempt. Your progress might not be recorded.');
+    return false;
   }
 };
 
-export const getUserQuizAttempts = (): UserQuizAttempt[] => {
+export const getUserQuizAttempts = async (userId: string): Promise<UserQuizAttempt[]> => {
   try {
-    const attempts = localStorage.getItem('quiz_attempts');
-    return attempts ? JSON.parse(attempts) : [];
+    const { data, error } = await supabase
+      .from('quiz_attempts')
+      .select('*')
+      .eq('user_id', userId)
+      .order('completed_at', { ascending: false });
+      
+    if (error) {
+      console.error('Error getting quiz attempts:', error);
+      return [];
+    }
+    
+    // Transform data to match our interface
+    return data.map(attempt => ({
+      id: attempt.id,
+      userId: attempt.user_id,
+      quizId: attempt.quiz_id,
+      score: attempt.score,
+      totalQuestions: attempt.total_questions,
+      correctAnswers: attempt.correct_answers,
+      incorrectAnswers: attempt.incorrect_answers,
+      skippedQuestions: attempt.skipped_questions,
+      timeTaken: attempt.time_taken,
+      completedAt: attempt.completed_at
+    }));
   } catch (error) {
     console.error('Error getting quiz attempts:', error);
     return [];
   }
 };
 
-export const getUserQuizAttemptsById = (userId: string): UserQuizAttempt[] => {
-  const attempts = getUserQuizAttempts();
-  return attempts.filter(attempt => attempt.userId === userId);
-};
-
-// Initialize local storage with default categories if none exist
+// Initialize function
 export const initializeQuizData = (): void => {
-  console.log('Initializing quiz data...');
-  
-  if (!localStorage.getItem('quiz_categories')) {
-    localStorage.setItem('quiz_categories', JSON.stringify(defaultCategories));
-    console.log('Initialized default categories');
-  }
-  
-  if (!localStorage.getItem('quizzes')) {
-    localStorage.setItem('quizzes', JSON.stringify([]));
-    console.log('Initialized empty quizzes array');
-  } else {
-    const quizzes = JSON.parse(localStorage.getItem('quizzes') || '[]');
-    console.log(`Found ${quizzes.length} existing quizzes`);
-    console.log(`Published quizzes: ${quizzes.filter(q => q.isPublished).length}`);
-  }
-  
-  if (!localStorage.getItem('quiz_attempts')) {
-    localStorage.setItem('quiz_attempts', JSON.stringify([]));
-    console.log('Initialized empty quiz attempts array');
-  }
-  
-  if (!localStorage.getItem('users')) {
-    localStorage.setItem('users', JSON.stringify([]));
-    console.log('Initialized empty users array');
-  } else {
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    console.log(`Found ${users.length} existing users`);
-  }
-  
-  console.log("Data initialization complete");
+  console.log('Initializing quiz data with Supabase integration...');
+  // No need to initialize local storage data since we're using Supabase
 };

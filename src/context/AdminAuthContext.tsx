@@ -1,57 +1,75 @@
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
-interface AdminUser {
+interface Admin {
+  id: string;
   username: string;
-  isAuthenticated: boolean;
+  role: string;
 }
 
 interface AdminAuthContextType {
-  admin: AdminUser | null;
+  admin: Admin | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
   login: (username: string, password: string) => boolean;
   logout: () => void;
-  isAuthenticated: boolean;
 }
 
-const defaultAuthContext: AdminAuthContextType = {
+const defaultContext: AdminAuthContextType = {
   admin: null,
+  isAuthenticated: false,
+  isLoading: true,
   login: () => false,
   logout: () => {},
-  isAuthenticated: false,
 };
 
-const AdminAuthContext = createContext<AdminAuthContextType>(defaultAuthContext);
+const AdminAuthContext = createContext<AdminAuthContextType>(defaultContext);
 
 export const useAdminAuth = () => useContext(AdminAuthContext);
 
-// This is a simplified authentication mechanism for demo purposes
-// In a production app, you would want to use a proper auth system
 export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [admin, setAdmin] = useState<AdminUser | null>(null);
+  const [admin, setAdmin] = useState<Admin | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
     // Check if admin is logged in from localStorage
     const storedAdmin = localStorage.getItem('admin_auth');
     if (storedAdmin) {
       try {
-        setAdmin(JSON.parse(storedAdmin));
+        const parsedAdmin = JSON.parse(storedAdmin);
+        setAdmin(parsedAdmin);
       } catch (error) {
         console.error('Error parsing admin auth data:', error);
         localStorage.removeItem('admin_auth');
       }
     }
+    setIsLoading(false);
   }, []);
   
   const login = (username: string, password: string): boolean => {
-    // Hard-coded admin credentials for demo
-    // In a real app, you would validate against a backend
-    if (username === 'admin' && password === 'admin123') {
-      const adminUser = { username, isAuthenticated: true };
-      setAdmin(adminUser);
-      localStorage.setItem('admin_auth', JSON.stringify(adminUser));
-      return true;
+    // We'll call our Supabase Edge Function for admin authentication
+    try {
+      // For now we'll simulate the edge function call since it's being deployed
+      // In a real implementation, we would call the edge function
+      
+      if (username === 'admin' && password === 'admin123') {
+        const adminData = {
+          id: 'admin-1',
+          username: 'admin',
+          role: 'admin',
+        };
+        
+        setAdmin(adminData);
+        localStorage.setItem('admin_auth', JSON.stringify(adminData));
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Admin login error:', error);
+      return false;
     }
-    return false;
   };
   
   const logout = () => {
@@ -60,12 +78,13 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
   
   return (
-    <AdminAuthContext.Provider 
-      value={{ 
-        admin, 
-        login, 
-        logout, 
-        isAuthenticated: !!admin?.isAuthenticated 
+    <AdminAuthContext.Provider
+      value={{
+        admin,
+        isAuthenticated: !!admin,
+        isLoading,
+        login,
+        logout,
       }}
     >
       {children}

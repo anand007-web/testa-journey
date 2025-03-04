@@ -1,14 +1,8 @@
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Session, User } from '@supabase/supabase-js';
 import { toast } from 'sonner';
-
-interface User {
-  id: string;
-  username: string;
-  email: string;
-  isAuthenticated: boolean;
-  createdAt: string;
-}
 
 interface UserRegistrationData {
   username: string;
@@ -23,21 +17,23 @@ interface UserLoginData {
 
 interface UserAuthContextType {
   user: User | null;
+  session: Session | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   register: (data: UserRegistrationData) => Promise<boolean>;
   login: (data: UserLoginData) => Promise<boolean>;
-  logout: () => void;
+  logout: () => Promise<void>;
   getUserProfile: () => User | null;
 }
 
 const defaultAuthContext: UserAuthContextType = {
   user: null,
+  session: null,
   isAuthenticated: false,
   isLoading: true,
   register: async () => false,
   login: async () => false,
-  logout: () => {},
+  logout: async () => {},
   getUserProfile: () => null,
 };
 
@@ -47,98 +43,114 @@ export const useUserAuth = () => useContext(UserAuthContext);
 
 export const UserAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    // Check if user is logged in from localStorage
-    const checkUserAuth = () => {
-      const storedUser = localStorage.getItem('user_auth');
-      if (storedUser) {
-        try {
-          const parsedUser = JSON.parse(storedUser);
-          setUser(parsedUser);
-        } catch (error) {
-          console.error('Error parsing user auth data:', error);
-          localStorage.removeItem('user_auth');
-        }
+    // Check active session and sets the user
+    const getSession = async () => {
+      setIsLoading(true);
+      
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error('Error getting session:', error.message);
       }
+      
+      if (session) {
+        setSession(session);
+        setUser(session.user);
+      }
+      
       setIsLoading(false);
     };
     
-    checkUserAuth();
+    getSession();
+    
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setIsLoading(false);
+    });
+    
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
   
-  // Enhanced registration function
+  // Enhanced registration function with Supabase
   const register = async (data: UserRegistrationData): Promise<boolean> => {
     try {
-      // Initialize users array if it doesn't exist yet
-      const existingUsersJson = localStorage.getItem('users');
-      const users = existingUsersJson ? JSON.parse(existingUsersJson) : [];
+      const { data: authData, error } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: {
+            username: data.username,
+          },
+        },
+      });
       
-      // Check if user already exists
-      const existingUser = users.find((u: any) => u.email === data.email);
-      
-      if (existingUser) {
-        toast.error('User with this email already exists');
+      if (error) {
+        console.error('Error registering user:', error.message);
+        toast.error(error.message);
         return false;
       }
       
-      // Create new user
-      const newUser: User = {
-        id: crypto.randomUUID(),
-        username: data.username,
-        email: data.email,
-        isAuthenticated: true,
-        createdAt: new Date().toISOString(),
-      };
+      if (authData.user) {
+        toast.success('Registration successful! Check your email for confirmation.');
+        return true;
+      }
       
-      // Store user in localStorage (with password for login - in a real app you would hash this)
-      const userWithPassword = { ...newUser, password: data.password };
-      users.push(userWithPassword);
-      localStorage.setItem('users', JSON.stringify(users));
-      
-      // Log user in
-      setUser(newUser);
-      localStorage.setItem('user_auth', JSON.stringify(newUser));
-      
-      return true;
-    } catch (error) {
-      console.error('Error registering user:', error);
+      return false;
+    } catch (error: any) {
+      console.error('Error registering user:', error.message);
+      toast.error('Registration failed. Please try again.');
       return false;
     }
   };
   
   const login = async (data: UserLoginData): Promise<boolean> => {
     try {
-      // Initialize users array if it doesn't exist yet
-      const existingUsersJson = localStorage.getItem('users');
-      const users = existingUsersJson ? JSON.parse(existingUsersJson) : [];
+      const { data: authData, error } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      });
       
-      const foundUser = users.find(
-        (u: any) => u.email === data.email && u.password === data.password
-      );
+      if (error) {
+        console.error('Error logging in:', error.message);
+        toast.error(error.message);
+        return false;
+      }
       
-      if (foundUser) {
-        // Remove password before storing in state and localStorage
-        const { password, ...userWithoutPassword } = foundUser;
-        const loggedInUser = { ...userWithoutPassword, isAuthenticated: true };
-        
-        setUser(loggedInUser);
-        localStorage.setItem('user_auth', JSON.stringify(loggedInUser));
+      if (authData.user) {
+        toast.success('Login successful!');
         return true;
       }
       
       return false;
-    } catch (error) {
-      console.error('Error logging in:', error);
+    } catch (error: any) {
+      console.error('Error logging in:', error.message);
+      toast.error('Login failed. Please try again.');
       return false;
     }
   };
   
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('user_auth');
-    toast.success('Logged out successfully');
+  const logout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('Error logging out:', error.message);
+        toast.error(error.message);
+      } else {
+        toast.success('Logged out successfully');
+      }
+    } catch (error: any) {
+      console.error('Error logging out:', error.message);
+      toast.error('Logout failed. Please try again.');
+    }
   };
   
   const getUserProfile = () => user;
@@ -147,7 +159,8 @@ export const UserAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     <UserAuthContext.Provider
       value={{
         user,
-        isAuthenticated: !!user?.isAuthenticated,
+        session,
+        isAuthenticated: !!user,
         isLoading,
         register,
         login,

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,10 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useUserAuth } from '@/context/UserAuthContext';
+import { UserPlus, Mail, Lock, User, Loader2 } from 'lucide-react';
 
 const UserRegister: React.FC = () => {
   const navigate = useNavigate();
-  const { register, isAuthenticated } = useUserAuth();
+  const { register, isAuthenticated, isLoading: authLoading } = useUserAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     username: '',
@@ -23,10 +24,11 @@ const UserRegister: React.FC = () => {
     email: '',
     password: '',
     confirmPassword: '',
+    general: '',
   });
 
   // Redirect if already logged in
-  React.useEffect(() => {
+  useEffect(() => {
     if (isAuthenticated) {
       navigate('/dashboard');
     }
@@ -36,12 +38,12 @@ const UserRegister: React.FC = () => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
     // Clear error when field is edited
-    setErrors({ ...errors, [name]: '' });
+    setErrors({ ...errors, [name]: '', general: '' });
   };
 
   const validateForm = () => {
     let valid = true;
-    const newErrors = { ...errors };
+    const newErrors = { ...errors, general: '' };
 
     if (!formData.username.trim()) {
       newErrors.username = 'Username is required';
@@ -93,40 +95,71 @@ const UserRegister: React.FC = () => {
       });
       
       if (success) {
-        toast.success('Registration successful!');
-        navigate('/dashboard');
+        // Redirect will happen automatically when auth state changes
+        // Toast will be shown by context
       } else {
-        toast.error('Registration failed. Please try again.');
+        setErrors({
+          ...errors,
+          general: 'Registration failed. Please try with a different email or username.',
+        });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Registration error:', error);
-      toast.error('Registration failed. Please try again.');
+      setErrors({
+        ...errors,
+        general: error.message || 'An error occurred. Please try again.',
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Show loading state during initial authentication check
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-muted/40">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+          <p className="text-muted-foreground">Checking authentication status...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-muted/40">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md border-primary/20 shadow-lg animate-in fade-in-50 duration-500 glass">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Create an account</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center flex items-center justify-center gap-2">
+            <UserPlus className="h-6 w-6 text-primary" />
+            <span>Create an account</span>
+          </CardTitle>
           <CardDescription className="text-center">
             Register to access SSC Mock Tests
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {errors.general && (
+              <div className="p-3 bg-destructive/10 border border-destructive rounded-md text-sm text-destructive">
+                {errors.general}
+              </div>
+            )}
+            
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                name="username"
-                placeholder="Enter your username"
-                value={formData.username}
-                onChange={handleChange}
-                disabled={isLoading}
-              />
+              <div className="relative">
+                <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="username"
+                  name="username"
+                  placeholder="Enter your username"
+                  value={formData.username}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                  className="pl-10"
+                />
+              </div>
               {errors.username && (
                 <p className="text-sm text-destructive">{errors.username}</p>
               )}
@@ -134,15 +167,19 @@ const UserRegister: React.FC = () => {
             
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="Enter your email"
-                value={formData.email}
-                onChange={handleChange}
-                disabled={isLoading}
-              />
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                  className="pl-10"
+                />
+              </div>
               {errors.email && (
                 <p className="text-sm text-destructive">{errors.email}</p>
               )}
@@ -150,15 +187,19 @@ const UserRegister: React.FC = () => {
             
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                placeholder="Create a password"
-                value={formData.password}
-                onChange={handleChange}
-                disabled={isLoading}
-              />
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  placeholder="Create a password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                  className="pl-10"
+                />
+              </div>
               {errors.password && (
                 <p className="text-sm text-destructive">{errors.password}</p>
               )}
@@ -166,22 +207,33 @@ const UserRegister: React.FC = () => {
             
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                placeholder="Confirm your password"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                disabled={isLoading}
-              />
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type="password"
+                  placeholder="Confirm your password"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                  className="pl-10"
+                />
+              </div>
               {errors.confirmPassword && (
                 <p className="text-sm text-destructive">{errors.confirmPassword}</p>
               )}
             </div>
             
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Creating Account...' : 'Create Account'}
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating Account...
+                </>
+              ) : (
+                <>Create Account</>
+              )}
             </Button>
           </form>
         </CardContent>
