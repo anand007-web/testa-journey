@@ -65,6 +65,7 @@ export default {
       },
       boxShadow: {
         subtle: "0 2px 10px rgba(0, 0, 0, 0.05)",
+        card: "0 4px 20px rgba(0, 0, 0, 0.08)",
       },
       keyframes: {
         "accordion-down": {
@@ -79,11 +80,16 @@ export default {
           "0%, 100%": { opacity: "0.6" },
           "50%": { opacity: "0.1" },
         },
+        "float": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-5px)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "pulse-light": "pulse-light 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+        "float": "float 3s ease-in-out infinite",
       },
     },
   },

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useUserAuth } from '@/context/UserAuthContext';
@@ -15,17 +16,22 @@ import {
   AwardIcon, 
   TimerIcon,
   UserIcon,
-  GraduationCapIcon
+  GraduationCapIcon,
+  MoonIcon,
+  SunIcon
 } from 'lucide-react';
 import { Quiz, getPublishedQuizzes, Category, getCategories, UserQuizAttempt, getUserQuizAttemptsById } from '@/data/quizModels';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useTheme } from '@/context/ThemeContext';
 
 const UserDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useUserAuth();
+  const { theme, toggleTheme } = useTheme();
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [attempts, setAttempts] = useState<UserQuizAttempt[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -34,16 +40,31 @@ const UserDashboard: React.FC = () => {
   }, [isAuthenticated, navigate]);
 
   useEffect(() => {
-    if (user) {
-      const loadedQuizzes = getPublishedQuizzes();
-      setQuizzes(loadedQuizzes);
+    const loadData = async () => {
+      setIsLoading(true);
       
-      const loadedCategories = getCategories();
-      setCategories(loadedCategories);
+      if (user) {
+        console.log("Loading data for user:", user.id);
+        
+        // Load published quizzes
+        const loadedQuizzes = getPublishedQuizzes();
+        console.log("Published quizzes loaded:", loadedQuizzes.length);
+        setQuizzes(loadedQuizzes);
+        
+        // Load categories
+        const loadedCategories = getCategories();
+        setCategories(loadedCategories);
+        
+        // Load user attempts
+        const userAttempts = getUserQuizAttemptsById(user.id);
+        console.log("User quiz attempts loaded:", userAttempts.length);
+        setAttempts(userAttempts);
+      }
       
-      const userAttempts = getUserQuizAttemptsById(user.id);
-      setAttempts(userAttempts);
-    }
+      setIsLoading(false);
+    };
+    
+    loadData();
   }, [user]);
 
   const handleLogout = () => {
@@ -87,9 +108,11 @@ const UserDashboard: React.FC = () => {
 
   const formatDate = (dateString: string) => {
     try {
+      // Check if the date string is valid
       const date = new Date(dateString);
       
       if (isNaN(date.getTime())) {
+        console.error('Invalid date string:', dateString);
         return 'Invalid date';
       }
       
@@ -106,12 +129,32 @@ const UserDashboard: React.FC = () => {
     }
   };
 
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="h-12 w-12 rounded-full border-4 border-primary border-t-transparent animate-spin mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border">
+    <div className="min-h-screen bg-background transition-colors duration-300">
+      <header className="border-b border-border sticky top-0 bg-background/80 backdrop-blur-sm z-10">
         <div className="container mx-auto py-4 px-4 flex justify-between items-center">
-          <h1 className="text-xl md:text-2xl font-bold">SSC Mock Test Dashboard</h1>
+          <h1 className="text-xl md:text-2xl font-bold">QuizHive Dashboard</h1>
           <div className="flex items-center gap-4">
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={toggleTheme}
+              className="rounded-full"
+            >
+              {theme === 'dark' ? <SunIcon className="h-4 w-4" /> : <MoonIcon className="h-4 w-4" />}
+            </Button>
             <div className="hidden md:flex items-center gap-2">
               <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                 <UserIcon className="h-4 w-4" />
@@ -131,7 +174,7 @@ const UserDashboard: React.FC = () => {
 
       <main className="container mx-auto py-8 px-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
+          <Card className="hover:shadow-card transition-all duration-300 glass">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -145,7 +188,7 @@ const UserDashboard: React.FC = () => {
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="hover:shadow-card transition-all duration-300 glass">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -159,7 +202,7 @@ const UserDashboard: React.FC = () => {
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="hover:shadow-card transition-all duration-300 glass">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -173,7 +216,7 @@ const UserDashboard: React.FC = () => {
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="hover:shadow-card transition-all duration-300 glass">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -188,7 +231,7 @@ const UserDashboard: React.FC = () => {
           </Card>
         </div>
 
-        <Tabs defaultValue="quizzes">
+        <Tabs defaultValue="quizzes" className="animate-in">
           <TabsList className="mb-6">
             <TabsTrigger value="quizzes">
               <FileTextIcon className="mr-2 h-4 w-4" />
@@ -204,7 +247,7 @@ const UserDashboard: React.FC = () => {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="quizzes">
+          <TabsContent value="quizzes" className="animate-in-delay-100">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {quizzes.length > 0 ? (
                 quizzes.map((quiz) => {
@@ -212,11 +255,11 @@ const UserDashboard: React.FC = () => {
                   const highestScore = getHighestScore(quiz.id);
                   
                   return (
-                    <Card key={quiz.id} className="overflow-hidden flex flex-col">
+                    <Card key={quiz.id} className="overflow-hidden flex flex-col hover:shadow-card transition-all duration-300 glass animate-in">
                       <CardHeader className="pb-2">
                         <div className="flex items-start justify-between">
                           <div>
-                            <Badge className="mb-2">{getCategoryName(quiz.categoryId)}</Badge>
+                            <Badge variant="outline" className="mb-2 hover-scale">{getCategoryName(quiz.categoryId)}</Badge>
                             <CardTitle>{quiz.title}</CardTitle>
                           </div>
                         </div>
@@ -251,9 +294,12 @@ const UserDashboard: React.FC = () => {
                         )}
                       </CardContent>
                       <CardFooter className="pt-2">
-                        <Button asChild className="w-full">
+                        <Button asChild className="w-full relative overflow-hidden group">
                           <Link to={`/quiz/${quiz.id}`}>
-                            {quizAttempts.length > 0 ? 'Retry Quiz' : 'Start Quiz'}
+                            <span className="relative z-10">
+                              {quizAttempts.length > 0 ? 'Retry Quiz' : 'Start Quiz'}
+                            </span>
+                            <span className="absolute inset-0 bg-gradient-to-r from-primary to-primary/80 group-hover:opacity-90 transition-opacity opacity-100"></span>
                           </Link>
                         </Button>
                       </CardFooter>
@@ -261,7 +307,7 @@ const UserDashboard: React.FC = () => {
                   );
                 })
               ) : (
-                <div className="col-span-full text-center py-12 border rounded-lg">
+                <div className="col-span-full text-center py-12 border rounded-lg glass animate-in">
                   <GraduationCapIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                   <h2 className="text-xl font-semibold mb-2">No Quizzes Available</h2>
                   <p className="text-muted-foreground">
@@ -272,8 +318,8 @@ const UserDashboard: React.FC = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="history">
-            <Card>
+          <TabsContent value="history" className="animate-in-delay-100">
+            <Card className="glass">
               <CardHeader>
                 <CardTitle>Your Test History</CardTitle>
                 <CardDescription>
@@ -284,7 +330,7 @@ const UserDashboard: React.FC = () => {
                 {attempts.length > 0 ? (
                   <div className="space-y-4">
                     {attempts.map((attempt, index) => (
-                      <div key={index} className="p-4 border rounded-lg">
+                      <div key={index} className="p-4 border rounded-lg hover:shadow-sm transition-all duration-300 animate-in">
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-3">
                           <div>
                             <h3 className="font-medium">{getQuizName(attempt.quizId)}</h3>
@@ -292,7 +338,7 @@ const UserDashboard: React.FC = () => {
                               Completed on {formatDate(attempt.completedAt)}
                             </p>
                           </div>
-                          <Badge variant={attempt.score >= 70 ? "default" : "outline"}>
+                          <Badge variant={attempt.score >= 70 ? "default" : "outline"} className="hover-scale">
                             {attempt.score}% Score
                           </Badge>
                         </div>
@@ -323,6 +369,7 @@ const UserDashboard: React.FC = () => {
                             variant="outline"
                             size="sm"
                             asChild
+                            className="hover-scale"
                           >
                             <Link to={`/quiz/${attempt.quizId}`}>
                               Retake Quiz
@@ -333,7 +380,7 @@ const UserDashboard: React.FC = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-12">
+                  <div className="text-center py-12 animate-in">
                     <HistoryIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                     <h3 className="text-lg font-medium mb-2">No Test History</h3>
                     <p className="text-muted-foreground mb-4">
@@ -348,8 +395,8 @@ const UserDashboard: React.FC = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="achievements">
-            <Card>
+          <TabsContent value="achievements" className="animate-in-delay-100">
+            <Card className="glass">
               <CardHeader>
                 <CardTitle>Your Achievements</CardTitle>
                 <CardDescription>
@@ -358,7 +405,7 @@ const UserDashboard: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  <div className={`p-4 border rounded-lg ${attempts.length >= 1 ? "bg-primary/5 border-primary" : "opacity-50"}`}>
+                  <div className={`p-4 border rounded-lg ${attempts.length >= 1 ? "bg-primary/5 border-primary animate-float" : "opacity-50"}`}>
                     <div className="flex items-center gap-3">
                       <div className={`h-12 w-12 rounded-full flex items-center justify-center ${attempts.length >= 1 ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
                         <TrophyIcon className="h-6 w-6" />

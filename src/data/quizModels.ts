@@ -1,4 +1,6 @@
+
 import { Question, DifficultyLevel } from '@/data/questionData';
+import { toast } from 'sonner';
 
 export interface Category {
   id: string;
@@ -82,8 +84,26 @@ export const getCategories = (): Category[] => {
   }
 };
 
+// Warning for localStorage vs database in production
+const showDatabaseWarning = (() => {
+  let hasShown = false;
+  
+  return () => {
+    if (!hasShown) {
+      console.warn("Using localStorage for data persistence. For production use, consider implementing a database solution.");
+      toast.warning("This is a demo version using browser storage. In production, connect to a database for data persistence.", {
+        duration: 5000,
+        id: "database-warning"
+      });
+      hasShown = true;
+    }
+  };
+})();
+
 export const getQuizzes = (): Quiz[] => {
   try {
+    showDatabaseWarning();
+    
     const quizzes = localStorage.getItem('quizzes');
     if (!quizzes) {
       // If no quizzes exist, initialize with empty array and save
@@ -115,6 +135,8 @@ export const getQuizById = (id: string): Quiz | undefined => {
 
 export const saveCategory = (category: Category): void => {
   try {
+    showDatabaseWarning();
+    
     const categories = getCategories();
     const existingIndex = categories.findIndex(c => c.id === category.id);
     
@@ -142,6 +164,8 @@ export const saveCategory = (category: Category): void => {
 
 export const saveQuiz = (quiz: Quiz): void => {
   try {
+    showDatabaseWarning();
+    
     const quizzes = getQuizzes();
     const existingIndex = quizzes.findIndex(q => q.id === quiz.id);
     
@@ -167,29 +191,38 @@ export const saveQuiz = (quiz: Quiz): void => {
     console.log(`Saved ${quizzes.length} quizzes to localStorage`);
   } catch (error) {
     console.error('Error saving quiz:', error);
+    toast.error("Failed to save quiz. Please try again.");
   }
 };
 
 export const deleteQuiz = (id: string): void => {
   try {
+    showDatabaseWarning();
+    
     const quizzes = getQuizzes();
     const updatedQuizzes = quizzes.filter(quiz => quiz.id !== id);
     localStorage.setItem('quizzes', JSON.stringify(updatedQuizzes));
+    toast.success("Quiz deleted successfully");
   } catch (error) {
     console.error('Error deleting quiz:', error);
+    toast.error("Failed to delete quiz. Please try again.");
   }
 };
 
 export const saveUserQuizAttempt = (attempt: UserQuizAttempt): void => {
   try {
+    showDatabaseWarning();
+    
     const attempts = getUserQuizAttempts();
     attempts.push({
       ...attempt,
       id: attempt.id || crypto.randomUUID(),
     });
     localStorage.setItem('quiz_attempts', JSON.stringify(attempts));
+    console.log(`Saved quiz attempt for user ${attempt.userId}, quiz ${attempt.quizId}, score: ${attempt.score}%`);
   } catch (error) {
     console.error('Error saving quiz attempt:', error);
+    toast.error("Failed to save your quiz attempt. Your progress might not be recorded.");
   }
 };
 
@@ -238,4 +271,6 @@ export const initializeQuizData = (): void => {
     const users = JSON.parse(localStorage.getItem('users') || '[]');
     console.log(`Found ${users.length} existing users`);
   }
+  
+  console.log("Data initialization complete");
 };
