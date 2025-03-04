@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,10 +53,10 @@ const QuizManager: React.FC<QuizManagerProps> = ({ onEditQuizQuestions }) => {
   const [newQuiz, setNewQuiz] = useState<Partial<SupabaseQuiz>>({
     title: '',
     description: '',
-    category_id: '',
+    categoryId: '',
     questions: [],
-    time_limit: 30,
-    is_published: false,
+    timeLimit: 30,
+    isPublished: false,
   });
   const [editingQuizId, setEditingQuizId] = useState<string | null>(null);
   const [selectedTab, setSelectedTab] = useState('all');
@@ -82,10 +81,10 @@ const QuizManager: React.FC<QuizManagerProps> = ({ onEditQuizQuestions }) => {
     setNewQuiz({
       title: '',
       description: '',
-      category_id: '',
+      categoryId: '',
       questions: [],
-      time_limit: 30,
-      is_published: false,
+      timeLimit: 30,
+      isPublished: false,
     });
     setEditingQuizId(null);
   };
@@ -96,7 +95,7 @@ const QuizManager: React.FC<QuizManagerProps> = ({ onEditQuizQuestions }) => {
       return;
     }
 
-    if (!newQuiz.category_id) {
+    if (!newQuiz.categoryId) {
       toast.error('Please select a category');
       return;
     }
@@ -105,9 +104,9 @@ const QuizManager: React.FC<QuizManagerProps> = ({ onEditQuizQuestions }) => {
       id: crypto.randomUUID(),
       title: newQuiz.title || 'Untitled Quiz',
       description: newQuiz.description || '',
-      categoryId: newQuiz.category_id || categories[0]?.id || '',
+      categoryId: newQuiz.categoryId || categories[0]?.id || '',
       questions: [],
-      timeLimit: newQuiz.time_limit || 30,
+      timeLimit: newQuiz.timeLimit || 30,
       passingScore: newQuiz.passing_score || 70,
       isPublished: false,
       createdAt: new Date().toISOString(),
@@ -133,7 +132,7 @@ const QuizManager: React.FC<QuizManagerProps> = ({ onEditQuizQuestions }) => {
       return;
     }
 
-    if (!newQuiz.category_id) {
+    if (!newQuiz.categoryId) {
       toast.error('Please select a category');
       return;
     }
@@ -144,8 +143,8 @@ const QuizManager: React.FC<QuizManagerProps> = ({ onEditQuizQuestions }) => {
         ...existingQuiz,
         title: newQuiz.title,
         description: newQuiz.description || '',
-        categoryId: newQuiz.category_id,
-        timeLimit: newQuiz.time_limit || existingQuiz.timeLimit || 30,
+        categoryId: newQuiz.categoryId,
+        timeLimit: newQuiz.timeLimit || existingQuiz.timeLimit || 30,
         passingScore: newQuiz.passing_score || existingQuiz.passingScore || 70,
         updatedAt: new Date().toISOString(),
       };
@@ -162,8 +161,8 @@ const QuizManager: React.FC<QuizManagerProps> = ({ onEditQuizQuestions }) => {
     setNewQuiz({
       title: quiz.title,
       description: quiz.description,
-      category_id: quiz.categoryId,
-      time_limit: quiz.timeLimit || 30,
+      categoryId: quiz.categoryId,
+      timeLimit: quiz.timeLimit || 30,
       passing_score: quiz.passingScore || 70,
     });
   };
@@ -256,8 +255,8 @@ const QuizManager: React.FC<QuizManagerProps> = ({ onEditQuizQuestions }) => {
             <div className="space-y-2">
               <Label htmlFor="quiz-category">Category</Label>
               <Select
-                value={newQuiz.category_id}
-                onValueChange={(value) => setNewQuiz({ ...newQuiz, category_id: value })}
+                value={newQuiz.categoryId}
+                onValueChange={(value) => setNewQuiz({ ...newQuiz, categoryId: value })}
               >
                 <SelectTrigger id="quiz-category">
                   <SelectValue placeholder="Select a category" />
@@ -280,10 +279,10 @@ const QuizManager: React.FC<QuizManagerProps> = ({ onEditQuizQuestions }) => {
                 min="1"
                 max="180"
                 placeholder="30"
-                value={newQuiz.time_limit || ''}
+                value={newQuiz.timeLimit || ''}
                 onChange={(e) => setNewQuiz({ 
                   ...newQuiz, 
-                  time_limit: Math.max(1, Math.min(180, parseInt(e.target.value) || 30)) 
+                  timeLimit: Math.max(1, Math.min(180, parseInt(e.target.value) || 30)) 
                 })}
               />
             </div>
@@ -334,15 +333,15 @@ const QuizManager: React.FC<QuizManagerProps> = ({ onEditQuizQuestions }) => {
                         <div>
                           <h3 className="text-lg font-semibold">{quiz.title}</h3>
                           <div className="flex items-center gap-2 mt-1">
-                            <Badge variant={quiz.is_published ? "default" : "outline"}>
-                              {quiz.is_published ? 'Published' : 'Draft'}
+                            <Badge variant={quiz.isPublished ? "default" : "outline"}>
+                              {quiz.isPublished ? 'Published' : 'Draft'}
                             </Badge>
                             <Badge variant="secondary">
-                              {getCategoryName(quiz.category_id)}
+                              {getCategoryName(quiz.categoryId)}
                             </Badge>
                             <span className="text-xs text-muted-foreground flex items-center">
                               <ClockIcon className="h-3 w-3 mr-1" />
-                              {quiz.time_limit || 30} min
+                              {quiz.timeLimit || 30} min
                             </span>
                             <span className="text-xs text-muted-foreground flex items-center">
                               <FileTextIcon className="h-3 w-3 mr-1" />
@@ -355,9 +354,9 @@ const QuizManager: React.FC<QuizManagerProps> = ({ onEditQuizQuestions }) => {
                             variant="ghost" 
                             size="sm"
                             onClick={() => handleTogglePublish(quiz)}
-                            title={quiz.is_published ? 'Unpublish' : 'Publish'}
+                            title={quiz.isPublished ? 'Unpublish' : 'Publish'}
                           >
-                            <CheckCircleIcon className={`h-4 w-4 ${quiz.is_published ? 'text-green-500' : 'text-muted-foreground'}`} />
+                            <CheckCircleIcon className={`h-4 w-4 ${quiz.isPublished ? 'text-green-500' : 'text-muted-foreground'}`} />
                           </Button>
                           <Button 
                             variant="ghost" 

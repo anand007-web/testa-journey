@@ -31,19 +31,20 @@ export type Quiz = {
   id: string;
   title: string;
   description: string | null;
-  category_id: string | null;
-  user_id: string;
-  time_limit: number | null;
-  passing_score: number | null;
-  is_published: boolean;
-  created_at: string;
-  updated_at: string;
-  // Add these fields to match the application's expected structure
+  category_id?: string | null;
   categoryId?: string; // Required in quizModels.ts but optional here for compatibility
-  questions?: any[];
+  user_id?: string;
+  time_limit?: number | null;
+  timeLimit?: number | null;
+  passing_score?: number | null;
+  passingScore?: number | null;
+  is_published?: boolean;
   isPublished?: boolean;
+  created_at?: string;
+  updated_at?: string;
   createdAt?: string;
   updatedAt?: string;
+  questions?: any[];
 };
 
 export type Question = {

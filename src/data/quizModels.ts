@@ -37,7 +37,6 @@ export interface UserQuizAttempt {
   completedAt: string;
 }
 
-// Helper functions for quiz management using Supabase
 export const getCategories = async (): Promise<Category[]> => {
   try {
     const { data, error } = await supabase
@@ -51,7 +50,6 @@ export const getCategories = async (): Promise<Category[]> => {
       return [];
     }
     
-    // Transform the data to match our interface
     return data.map(category => ({
       id: category.id,
       name: category.name,
@@ -78,7 +76,6 @@ export const getQuizzes = async (): Promise<Quiz[]> => {
       return [];
     }
     
-    // Fetch all questions and answers in batch operations
     const { data: questionsData, error: questionsError } = await supabase
       .from('questions')
       .select('*');
@@ -97,16 +94,12 @@ export const getQuizzes = async (): Promise<Quiz[]> => {
       return [];
     }
     
-    // Transform data to match our interfaces
     const quizzes = quizzesData.map(quiz => {
-      // Find all questions for this quiz
       const quizQuestions = questionsData.filter(q => q.quiz_id === quiz.id);
       
-      // For each question, find its answers
       const questions: QuestionData[] = quizQuestions.map(question => {
         const questionAnswers = answersData.filter(a => a.question_id === question.id);
         
-        // Find the correct answer index
         const correctAnswerIndex = questionAnswers.findIndex(a => a.is_correct);
         
         return {
@@ -167,14 +160,12 @@ export const getQuizById = async (id: string): Promise<Quiz | undefined> => {
 
 export const saveCategory = async (category: any): Promise<boolean> => {
   try {
-    // Format data for Supabase
     const categoryData = {
       id: category.id,
       name: category.name,
       description: category.description || null
     };
     
-    // Check if category exists
     const { data: existingCategory } = await supabase
       .from('categories')
       .select('id')
@@ -184,13 +175,11 @@ export const saveCategory = async (category: any): Promise<boolean> => {
     let result;
     
     if (existingCategory) {
-      // Update existing category
       result = await supabase
         .from('categories')
         .update(categoryData)
         .eq('id', category.id);
     } else {
-      // Create new category
       result = await supabase
         .from('categories')
         .insert(categoryData);
@@ -212,8 +201,6 @@ export const saveCategory = async (category: any): Promise<boolean> => {
 
 export const saveQuiz = async (quiz: Quiz): Promise<boolean> => {
   try {
-    // Begin a transaction using multiple operations
-    // 1. Save quiz data
     const quizData = {
       id: quiz.id,
       title: quiz.title,
@@ -222,10 +209,9 @@ export const saveQuiz = async (quiz: Quiz): Promise<boolean> => {
       time_limit: quiz.timeLimit || null,
       passing_score: quiz.passingScore || null,
       is_published: quiz.isPublished,
-      // Supabase automatically handles created_at and updated_at
+      user_id: quiz.user_id
     };
     
-    // Check if quiz exists
     const { data: existingQuiz } = await supabase
       .from('quizzes')
       .select('id')
@@ -235,14 +221,11 @@ export const saveQuiz = async (quiz: Quiz): Promise<boolean> => {
     let quizResult;
     
     if (existingQuiz) {
-      // Update existing quiz
       quizResult = await supabase
         .from('quizzes')
         .update(quizData)
         .eq('id', quiz.id);
     } else {
-      // Create new quiz with a user_id 
-      // This assumes the user is authenticated; we get the user ID from the auth context
       const { data: userData } = await supabase.auth.getUser();
       if (!userData || !userData.user) {
         toast.error('You must be logged in to create a quiz');
@@ -261,7 +244,6 @@ export const saveQuiz = async (quiz: Quiz): Promise<boolean> => {
       return false;
     }
     
-    // 2. Save questions and answers
     for (const question of quiz.questions) {
       const questionData = {
         id: question.id.toString(),
@@ -272,7 +254,6 @@ export const saveQuiz = async (quiz: Quiz): Promise<boolean> => {
         points: question.points || 1
       };
       
-      // Check if question exists
       const { data: existingQuestion } = await supabase
         .from('questions')
         .select('id')
@@ -282,13 +263,11 @@ export const saveQuiz = async (quiz: Quiz): Promise<boolean> => {
       let questionResult;
       
       if (existingQuestion) {
-        // Update existing question
         questionResult = await supabase
           .from('questions')
           .update(questionData)
           .eq('id', question.id.toString());
       } else {
-        // Create new question
         questionResult = await supabase
           .from('questions')
           .insert(questionData);
@@ -300,7 +279,6 @@ export const saveQuiz = async (quiz: Quiz): Promise<boolean> => {
         return false;
       }
       
-      // Save answers for this question
       for (let i = 0; i < question.options.length; i++) {
         const option = question.options[i];
         const isCorrect = i === question.correctAnswer;
@@ -313,7 +291,6 @@ export const saveQuiz = async (quiz: Quiz): Promise<boolean> => {
           is_correct: isCorrect
         };
         
-        // Check if answer exists
         const { data: existingAnswer } = await supabase
           .from('answers')
           .select('id')
@@ -323,13 +300,11 @@ export const saveQuiz = async (quiz: Quiz): Promise<boolean> => {
         let answerResult;
         
         if (existingAnswer) {
-          // Update existing answer
           answerResult = await supabase
             .from('answers')
             .update(answerData)
             .eq('id', answerId);
         } else {
-          // Create new answer
           answerResult = await supabase
             .from('answers')
             .insert(answerData);
@@ -354,7 +329,6 @@ export const saveQuiz = async (quiz: Quiz): Promise<boolean> => {
 
 export const deleteQuiz = async (id: string): Promise<boolean> => {
   try {
-    // Due to cascading deletes, we only need to delete the quiz
     const { error } = await supabase
       .from('quizzes')
       .delete()
@@ -387,7 +361,6 @@ export const saveUserQuizAttempt = async (attempt: UserQuizAttempt): Promise<boo
       incorrect_answers: attempt.incorrectAnswers,
       skipped_questions: attempt.skippedQuestions,
       time_taken: attempt.timeTaken
-      // completed_at is handled automatically
     };
     
     const { error } = await supabase
@@ -422,7 +395,6 @@ export const getUserQuizAttempts = async (userId: string): Promise<UserQuizAttem
       return [];
     }
     
-    // Transform data to match our interface
     return data.map(attempt => ({
       id: attempt.id,
       userId: attempt.user_id,
@@ -441,8 +413,6 @@ export const getUserQuizAttempts = async (userId: string): Promise<UserQuizAttem
   }
 };
 
-// Initialize function
 export const initializeQuizData = (): void => {
   console.log('Initializing quiz data with Supabase integration...');
-  // No need to initialize local storage data since we're using Supabase
 };
