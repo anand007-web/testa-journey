@@ -53,24 +53,16 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       console.log("Attempting admin login with:", username);
       
       // Direct fetch to ensure we're making the right request
-      const response = await fetch(`${supabase.functions.url}/admin-auth`, {
+      const { data, error } = await supabase.functions.invoke('admin-auth', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${supabase.auth.session()?.access_token || ''}`,
-          'apikey': supabase.supabaseKey || '',
-        },
-        body: JSON.stringify({ username, password }),
+        body: { username, password },
       });
       
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Admin auth response error:', response.status, errorText);
-        toast.error(`Authentication failed (${response.status})`);
+      if (error) {
+        console.error('Admin auth response error:', error);
+        toast.error(`Authentication failed: ${error.message}`);
         return false;
       }
-      
-      const data = await response.json();
       
       if (data?.success && data?.admin) {
         const adminData = data.admin;
