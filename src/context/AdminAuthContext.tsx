@@ -52,7 +52,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     try {
       console.log("Attempting admin login with:", username);
       
-      // Direct fetch to ensure we're making the right request
+      // Use supabase.functions.invoke method
       const { data, error } = await supabase.functions.invoke('admin-auth', {
         method: 'POST',
         body: { username, password },
