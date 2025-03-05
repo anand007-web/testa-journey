@@ -11,7 +11,7 @@ import Admin from "./pages/Admin";
 import { AdminAuthProvider } from "./context/AdminAuthContext";
 import { UserAuthProvider } from "./context/UserAuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
-import { SeasonalThemeProvider } from "./components/ui/seasonal-theme";
+import { CustomThemeProvider } from "./context/CustomThemeContext";
 import { useEffect } from "react";
 import { initializeQuizData } from "./data/quizModels";
 import UserLogin from "./pages/UserLogin";
@@ -20,6 +20,7 @@ import UserDashboard from "./pages/UserDashboard";
 import QuizPage from "./pages/QuizPage";
 import QuizList from "./pages/QuizList";
 import DatabaseNotice from "./components/DatabaseNotice";
+import { HeartFooter } from "./components/HeartFooter";
 
 const queryClient = new QueryClient();
 
@@ -32,7 +33,7 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <SeasonalThemeProvider>
+        <CustomThemeProvider>
           <TooltipProvider>
             <AdminAuthProvider>
               <UserAuthProvider>
@@ -52,11 +53,12 @@ const App = () => {
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>
+                  <HeartFooter />
                 </BrowserRouter>
               </UserAuthProvider>
             </AdminAuthProvider>
           </TooltipProvider>
-        </SeasonalThemeProvider>
+        </CustomThemeProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

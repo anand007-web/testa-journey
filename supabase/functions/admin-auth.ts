@@ -3,8 +3,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 // Define allowed admin credentials
 const ADMIN_CREDENTIALS = {
-  username: "admin",
-  password: "admin123", // In production, use secure passwords and store in environment variables
+  username: "Admin",
+  password: "Vaishaly", // In production, use secure passwords and store in environment variables
 };
 
 serve(async (req) => {

@@ -75,6 +75,186 @@
     --input: 240 3.7% 15.9%;
     --ring: 240 4.9% 83.9%;
   }
+
+  /* Minimalist Theme */
+  .theme-minimalist {
+    --background: 210 30% 98%;
+    --foreground: 220 40% 10%;
+    
+    --card: 0 0% 100%;
+    --card-foreground: 220 40% 10%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 40% 10%;
+    
+    --primary: 220 40% 50%;
+    --primary-foreground: 210 40% 98%;
+    
+    --secondary: 220 20% 96%;
+    --secondary-foreground: 220 40% 20%;
+    
+    --muted: 220 20% 96%;
+    --muted-foreground: 220 20% 50%;
+    
+    --accent: 220 20% 96%;
+    --accent-foreground: 220 40% 20%;
+    
+    --destructive: 0 70% 60%;
+    --destructive-foreground: 210 40% 98%;
+    
+    --border: 220 20% 90%;
+    --input: 220 20% 90%;
+    --ring: 220 40% 50%;
+    
+    --radius: 0.75rem;
+    
+    font-family: 'Helvetica', 'Arial', sans-serif;
+  }
+
+  /* Dark Delight Theme */
+  .theme-dark-delight {
+    --background: 240 20% 8%;
+    --foreground: 210 40% 98%;
+    
+    --card: 240 20% 12%;
+    --card-foreground: 210 40% 98%;
+    
+    --popover: 240 20% 12%;
+    --popover-foreground: 210 40% 98%;
+    
+    --primary: 280 80% 60%;
+    --primary-foreground: 210 40% 98%;
+    --primary-rgb: 153, 51, 255;
+    
+    --secondary: 240 20% 16%;
+    --secondary-foreground: 210 40% 98%;
+    
+    --muted: 240 20% 16%;
+    --muted-foreground: 240 20% 70%;
+    
+    --accent: 280 80% 60%;
+    --accent-foreground: 210 40% 98%;
+    
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 210 40% 98%;
+    
+    --border: 240 20% 16%;
+    --input: 240 20% 16%;
+    --ring: 280 80% 60%;
+    
+    --radius: 0.5rem;
+    
+    font-family: 'Arial', 'Helvetica', sans-serif;
+    font-weight: 600;
+  }
+
+  /* Playful Theme */
+  .theme-playful {
+    --background: 50 100% 97%;
+    --foreground: 280 60% 30%;
+    
+    --card: 0 0% 100%;
+    --card-foreground: 280 60% 30%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 280 60% 30%;
+    
+    --primary: 35 100% 60%;
+    --primary-foreground: 0 0% 100%;
+    --primary-rgb: 255, 153, 51;
+    
+    --secondary: 280 100% 90%;
+    --secondary-foreground: 280 60% 30%;
+    
+    --muted: 280 100% 95%;
+    --muted-foreground: 280 60% 50%;
+    
+    --accent: 340 100% 75%;
+    --accent-foreground: 0 0% 100%;
+    
+    --destructive: 0 100% 70%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 340 100% 90%;
+    --input: 340 100% 90%;
+    --ring: 340 100% 75%;
+    
+    --radius: 1.5rem;
+    
+    font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
+  }
+
+  /* Futuristic Theme */
+  .theme-futuristic {
+    --background: 220 40% 10%;
+    --foreground: 180 100% 80%;
+    
+    --card: 220 40% 15%;
+    --card-foreground: 180 100% 80%;
+    
+    --popover: 220 40% 15%;
+    --popover-foreground: 180 100% 80%;
+    
+    --primary: 180 100% 60%;
+    --primary-foreground: 220 40% 10%;
+    --primary-rgb: 0, 204, 204;
+    
+    --secondary: 220 40% 20%;
+    --secondary-foreground: 180 100% 80%;
+    
+    --muted: 220 40% 20%;
+    --muted-foreground: 180 100% 60%;
+    
+    --accent: 300 100% 60%;
+    --accent-foreground: 220 40% 10%;
+    
+    --destructive: 0 100% 60%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 220 40% 25%;
+    --input: 220 40% 25%;
+    --ring: 300 100% 60%;
+    
+    --radius: 0.25rem;
+    
+    font-family: 'Orbitron', 'Exo', sans-serif;
+  }
+
+  /* Nature Theme */
+  .theme-nature {
+    --background: 120 30% 98%;
+    --foreground: 120 50% 20%;
+    
+    --card: 60 30% 96%;
+    --card-foreground: 120 50% 20%;
+    
+    --popover: 60 30% 96%;
+    --popover-foreground: 120 50% 20%;
+    
+    --primary: 120 60% 40%;
+    --primary-foreground: 0 0% 100%;
+    --primary-rgb: 51, 153, 51;
+    
+    --secondary: 60 50% 90%;
+    --secondary-foreground: 120 50% 30%;
+    
+    --muted: 120 20% 90%;
+    --muted-foreground: 120 30% 50%;
+    
+    --accent: 40 80% 70%;
+    --accent-foreground: 120 50% 20%;
+    
+    --destructive: 0 80% 60%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 120 20% 80%;
+    --input: 120 20% 80%;
+    --ring: 120 60% 40%;
+    
+    --radius: 1rem;
+    
+    font-family: 'Indie Flower', 'Amatic SC', cursive;
+  }
  
   * {
     @apply border-border;
@@ -151,6 +331,27 @@
     @apply bg-gradient-to-r from-primary via-primary/90 to-primary/70 dark:from-primary dark:via-primary/80 dark:to-primary/60 bg-clip-text text-transparent;
   }
   
+  /* Theme-specific utilities */
+  .theme-minimalist .btn {
+    @apply rounded-lg shadow-sm hover:shadow-md transition-shadow;
+  }
+  
+  .theme-dark-delight .btn {
+    @apply rounded-md shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)] hover:shadow-[0_0_15px_rgba(var(--primary-rgb),0.8)] transition-shadow;
+  }
+  
+  .theme-playful .btn {
+    @apply rounded-2xl shadow-lg hover:scale-105 transition-transform;
+  }
+  
+  .theme-futuristic .btn {
+    @apply rounded-sm border-2 border-primary/20 shadow-[0_0_10px_rgba(var(--primary-rgb),0.3)] hover:shadow-[0_0_20px_rgba(var(--primary-rgb),0.6)] transition-shadow;
+  }
+  
+  .theme-nature .btn {
+    @apply rounded-full shadow-md hover:shadow-lg transition-shadow;
+  }
+  
   /* 3D Perspective and Card Flip Utilities */
   .perspective-1000 {
     perspective: 1000px;
@@ -224,5 +425,36 @@
   /* Card hover effects */
   .card-hover {
     @apply transition-transform duration-300 hover:scale-[1.02] hover:shadow-lg;
+  }
+
+  /* Theme-specific animations */
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 5px rgba(var(--primary-rgb), 0.5); }
+    50% { box-shadow: 0 0 20px rgba(var(--primary-rgb), 0.8); }
+  }
+  
+  .theme-dark-delight .pulse-glow,
+  .theme-futuristic .pulse-glow {
+    animation: pulse-glow 2s infinite;
+  }
+  
+  @keyframes bounce-subtle {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+  }
+  
+  .theme-playful .bounce-subtle {
+    animation: bounce-subtle 2s infinite;
+  }
+  
+  @keyframes color-cycle {
+    0% { color: rgba(var(--primary-rgb), 1); }
+    33% { color: rgba(var(--accent-foreground), 1); }
+    66% { color: rgba(var(--destructive), 1); }
+    100% { color: rgba(var(--primary-rgb), 1); }
+  }
+  
+  .theme-playful .color-cycle {
+    animation: color-cycle 8s infinite;
   }
 }

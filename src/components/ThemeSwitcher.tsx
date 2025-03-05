@@ -3,7 +3,7 @@ import React from 'react';
 import { Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/context/ThemeContext';
-import { SeasonalThemeSwitcher } from '@/components/ui/seasonal-theme';
+import { CustomThemeSwitcher } from '@/components/CustomThemeSwitcher';
 
 export function ThemeSwitcher() {
   const { theme, toggleTheme } = useTheme();
@@ -19,8 +19,7 @@ export function ThemeSwitcher() {
       </div>
       
       <div className="space-y-2">
-        <h4 className="text-sm font-medium">Seasonal Theme</h4>
-        <SeasonalThemeSwitcher />
+        <CustomThemeSwitcher />
       </div>
     </div>
   );

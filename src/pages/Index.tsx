@@ -3,15 +3,17 @@ import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { UserIcon, ShieldIcon, MoonIcon, SunIcon } from 'lucide-react';
+import { UserIcon, ShieldIcon, MoonIcon, SunIcon, PaletteIcon } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
+import { useCustomTheme } from '@/context/CustomThemeContext';
+import { CustomThemeSwitcher } from '@/components/CustomThemeSwitcher';
 
 const Index = () => {
   const { theme, toggleTheme } = useTheme();
   
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4 transition-colors duration-300">
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-4 right-4 flex gap-2">
         <Button 
           variant="outline" 
           size="icon" 
@@ -81,7 +83,21 @@ const Index = () => {
           </Card>
         </div>
         
-        <div className="mt-12 text-center">
+        <div className="mt-8 mb-12">
+          <Card className="w-full max-w-xl mx-auto p-4">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 justify-center">
+                <PaletteIcon className="h-5 w-5" />
+                <span>Theme Options</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CustomThemeSwitcher />
+            </CardContent>
+          </Card>
+        </div>
+        
+        <div className="text-center">
           <p className="text-muted-foreground text-sm">
             &copy; {new Date().getFullYear()} QuizHive. All rights reserved.
           </p>
