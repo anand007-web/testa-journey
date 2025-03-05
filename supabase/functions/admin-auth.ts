@@ -3,7 +3,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 // Define allowed admin credentials
 const ADMIN_CREDENTIALS = {
-  username: "Admin@gmail.com", // Updated from Admin to Admin@gmail.com
+  username: "Admin",
   password: "Vaishaly", // In production, use secure passwords and store in environment variables
 };
 
@@ -11,15 +11,12 @@ const ADMIN_CREDENTIALS = {
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, apikey, x-client-info, content-type",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, apikey, x-client-info",
 };
 
 serve(async (req) => {
-  console.log("Admin auth function called");
-  
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
-    console.log("Handling OPTIONS request for CORS preflight");
     return new Response(null, {
       headers: corsHeaders,
       status: 204,
@@ -28,7 +25,6 @@ serve(async (req) => {
 
   // Only accept POST requests
   if (req.method !== "POST") {
-    console.log(`Received ${req.method} request, but only POST is allowed`);
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
       status: 405,
       headers: {

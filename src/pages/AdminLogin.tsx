@@ -8,11 +8,10 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { toast } from 'sonner';
 import { LockIcon, UserIcon } from 'lucide-react';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
-import HeartLoader from '@/components/HeartLoader';
 
 const AdminLogin: React.FC = () => {
-  const [username, setUsername] = useState('Admin@gmail.com'); // Default to Admin@gmail.com
-  const [password, setPassword] = useState('Vaishaly'); // Default to Vaishaly
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAdminAuth();
   const navigate = useNavigate();
@@ -22,7 +21,6 @@ const AdminLogin: React.FC = () => {
     setIsLoading(true);
     
     try {
-      console.log('Attempting to login with:', username, password);
       const success = await login(username, password);
       
       if (success) {
@@ -40,12 +38,10 @@ const AdminLogin: React.FC = () => {
   };
   
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="absolute top-4 right-4">
         <ThemeSwitcher />
       </div>
-      
-      {isLoading && <HeartLoader />}
       
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
