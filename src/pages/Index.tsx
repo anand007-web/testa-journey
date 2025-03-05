@@ -5,14 +5,32 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { UserIcon, ShieldIcon } from 'lucide-react';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
-import { LottieAnimation } from '@/components/ui/lottie-animation';
 
 const MemojiAnimation = () => {
   return (
-    <div className="w-24 h-24 mx-auto mb-2 animate-bounce-slow">
-      <div className="relative">
+    <div className="w-full flex justify-center mb-4">
+      <div className="relative perspective-1000 w-24 h-24 mb-8">
+        {/* Animated Background Glow */}
         <div className="absolute inset-0 rounded-full bg-gradient-to-r from-pink-300 via-purple-300 to-indigo-400 opacity-75 blur-lg animate-pulse"></div>
-        <div className="relative text-6xl">👩‍💻</div>
+        
+        {/* Desk with Books */}
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-32 h-10 bg-amber-800/30 rounded-t-lg"></div>
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 w-6 h-4 bg-amber-300/40 rounded-sm"></div>
+        
+        {/* Memoji Character */}
+        <div className="relative z-10 text-6xl animate-bounce-slow flex flex-col items-center">
+          <div className="text-7xl">👩‍💻</div>
+          
+          {/* Laptop Animation */}
+          <div className="absolute bottom-2 w-10 h-5 bg-gray-800/60 rounded-sm transform rotate-x-60 flex items-center justify-center">
+            <div className="w-8 h-3 bg-blue-400/60 rounded-sm animate-pulse">
+              <div className="w-1 h-1 bg-white rounded-full absolute top-1 left-1 animate-ping"></div>
+            </div>
+          </div>
+          
+          {/* Typing Animation */}
+          <div className="absolute bottom-0 w-2 h-2 bg-skin-tone rounded-full transform translate-y-1 animate-bounce-slow" style={{ animationDelay: '0.5s' }}></div>
+        </div>
       </div>
     </div>
   );

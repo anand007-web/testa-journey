@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Moon, Sun, Palette, ChevronDown, ChevronUp } from 'lucide-react';
+import { Palette, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/context/ThemeContext';
 import { useCustomTheme } from '@/context/CustomThemeContext';
@@ -16,50 +16,69 @@ export function ThemeSwitcher() {
   const [open, setOpen] = useState(false);
 
   const themes = [
-    { id: 'minimalist', name: 'Minimalist', icon: <Sun className="h-4 w-4" /> },
-    { id: 'dark-delight', name: 'Dark Delight', icon: <Moon className="h-4 w-4" /> },
+    { id: 'light', name: 'Light Mode', icon: <span className="text-xs">☀️</span> },
+    { id: 'dark', name: 'Dark Mode', icon: <span className="text-xs">🌙</span> },
+    { id: 'minimalist', name: 'Minimalist', icon: <span className="text-xs">✨</span> },
+    { id: 'dark-delight', name: 'Dark Delight', icon: <span className="text-xs">🌑</span> },
     { id: 'playful', name: 'Playful', icon: <span className="text-xs">🎨</span> },
     { id: 'futuristic', name: 'Futuristic', icon: <span className="text-xs">🚀</span> },
     { id: 'nature', name: 'Nature', icon: <span className="text-xs">🌿</span> },
   ];
 
+  const handleThemeChange = (themeId: string) => {
+    if (themeId === 'light' || themeId === 'dark') {
+      // If Light or Dark theme is selected
+      setTheme('minimalist'); // Set a default custom theme
+      if (theme !== themeId) {
+        toggleTheme(); // Toggle between light and dark
+      }
+    } else {
+      // If any custom theme is selected
+      setTheme(themeId as any);
+      // Set proper base mode for custom themes
+      if ((themeId === 'dark-delight' || themeId === 'futuristic') && theme !== 'dark') {
+        toggleTheme(); // Ensure dark mode for dark-based themes
+      } else if ((themeId === 'minimalist' || themeId === 'playful' || themeId === 'nature') && theme !== 'light') {
+        toggleTheme(); // Ensure light mode for light-based themes
+      }
+    }
+    setOpen(false);
+  };
+
   return (
-    <div className="flex gap-2">
-      <Button variant="outline" size="icon" onClick={toggleTheme} className="rounded-full">
-        {theme === 'light' ? <Moon className="h-[1.2rem] w-[1.2rem]" /> : <Sun className="h-[1.2rem] w-[1.2rem]" />}
-        <span className="sr-only">Toggle theme</span>
-      </Button>
-      
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button variant="outline" size="icon" className="rounded-full">
-            <Palette className="h-[1.2rem] w-[1.2rem]" />
-            <span className="sr-only">Change theme style</span>
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-56 p-2">
-          <div className="space-y-2">
-            <h3 className="text-sm font-medium px-2 py-1">Choose Theme</h3>
-            <div className="space-y-1">
-              {themes.map((t) => (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" size="icon" className="rounded-full">
+          <Palette className="h-[1.2rem] w-[1.2rem]" />
+          <span className="sr-only">Change theme</span>
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-56 p-2">
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium px-2 py-1">Choose Theme</h3>
+          <div className="space-y-1">
+            {themes.map((t) => {
+              const isActive = 
+                (t.id === 'light' && theme === 'light') || 
+                (t.id === 'dark' && theme === 'dark') || 
+                (t.id !== 'light' && t.id !== 'dark' && customTheme === t.id);
+              
+              return (
                 <Button 
                   key={t.id} 
-                  variant={customTheme === t.id ? "default" : "ghost"} 
+                  variant={isActive ? "default" : "ghost"} 
                   size="sm"
                   className="w-full justify-start text-xs"
-                  onClick={() => {
-                    setTheme(t.id as any);
-                    setOpen(false);
-                  }}
+                  onClick={() => handleThemeChange(t.id)}
                 >
                   <span className="mr-2">{t.icon}</span>
                   {t.name}
                 </Button>
-              ))}
-            </div>
+              );
+            })}
           </div>
-        </PopoverContent>
-      </Popover>
-    </div>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }
