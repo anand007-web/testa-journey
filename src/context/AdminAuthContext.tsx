@@ -50,6 +50,8 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
+      console.log("Attempting admin login with:", username);
+      
       // Call our Supabase Edge Function for admin authentication
       const { data, error } = await supabase.functions.invoke('admin-auth', {
         body: { username, password },
@@ -57,7 +59,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       
       if (error) {
         console.error('Admin auth function error:', error);
-        toast.error('Authentication failed');
+        toast.error('Authentication failed: ' + error.message);
         return false;
       }
       
@@ -70,9 +72,9 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         toast.error(data?.error || 'Invalid credentials');
         return false;
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Admin login error:', error);
-      toast.error('Authentication failed');
+      toast.error(`Authentication failed: ${error?.message || 'Unknown error'}`);
       return false;
     }
   };

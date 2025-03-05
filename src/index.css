@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -436,6 +435,15 @@
   .theme-dark-delight .pulse-glow,
   .theme-futuristic .pulse-glow {
     animation: pulse-glow 2s infinite;
+  }
+  
+  @keyframes bounce-slow {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  
+  .animate-bounce-slow {
+    animation: bounce-slow 3s ease-in-out infinite;
   }
   
   @keyframes bounce-subtle {

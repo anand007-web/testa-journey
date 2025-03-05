@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { LockIcon, UserIcon } from 'lucide-react';
+import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 
 const AdminLogin: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -15,12 +16,12 @@ const AdminLogin: React.FC = () => {
   const { login } = useAdminAuth();
   const navigate = useNavigate();
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    setTimeout(() => {
-      const success = login(username, password);
+    try {
+      const success = await login(username, password);
       
       if (success) {
         toast.success('Logged in successfully');
@@ -28,13 +29,20 @@ const AdminLogin: React.FC = () => {
       } else {
         toast.error('Invalid username or password');
       }
-      
+    } catch (error) {
+      console.error('Login error:', error);
+      toast.error('Authentication failed. Please try again.');
+    } finally {
       setIsLoading(false);
-    }, 1000); // Simulate network delay
+    }
   };
   
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <div className="absolute top-4 right-4">
+        <ThemeSwitcher />
+      </div>
+      
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-2xl font-bold">Admin Login</CardTitle>
