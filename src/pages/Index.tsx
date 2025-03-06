@@ -3,7 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { UserIcon, ShieldIcon } from 'lucide-react';
+import { UserIcon, ShieldIcon, FileTextIcon } from 'lucide-react';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import HeartLoader from '@/components/HeartLoader';
 
@@ -21,7 +21,7 @@ const Index = () => {
           Test your knowledge with interactive quizzes
         </p>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card className="hover:shadow-lg transition-all duration-300 border-primary/20 hover:border-primary/60 glass">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -44,6 +44,31 @@ const Index = () => {
               <Button asChild variant="outline" className="w-full">
                 <Link to="/register">Register</Link>
               </Button>
+            </CardContent>
+          </Card>
+          
+          <Card className="hover:shadow-lg transition-all duration-300 border-primary/20 hover:border-primary/60 glass">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <FileTextIcon className="h-5 w-5 text-primary" />
+                </div>
+                <span>Create Quizzes</span>
+              </CardTitle>
+              <CardDescription>
+                Create your own custom quizzes with multiple-choice questions and share them
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3">
+              <Button asChild variant="default" className="w-full relative overflow-hidden group">
+                <Link to="/create-quiz">
+                  <span className="relative z-10">Create Quiz</span>
+                  <span className="absolute inset-0 bg-gradient-to-r from-primary to-primary/80 group-hover:opacity-90 transition-opacity opacity-100"></span>
+                </Link>
+              </Button>
+              <p className="text-sm text-center text-muted-foreground mt-2">
+                Login required to create quizzes
+              </p>
             </CardContent>
           </Card>
           

@@ -21,6 +21,7 @@ import QuizPage from "./pages/QuizPage";
 import QuizList from "./pages/QuizList";
 import DatabaseNotice from "./components/DatabaseNotice";
 import { HeartFooter } from "./components/HeartFooter";
+import UserQuizCreator from "./pages/UserQuizCreator";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +51,7 @@ const App = () => {
                     <Route path="/dashboard" element={<UserDashboard />} />
                     <Route path="/quizzes" element={<QuizList />} />
                     <Route path="/quiz/:id" element={<QuizPage />} />
+                    <Route path="/create-quiz" element={<UserQuizCreator />} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>
