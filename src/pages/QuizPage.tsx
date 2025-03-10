@@ -19,7 +19,7 @@ import { FlipCard } from '@/components/ui/flip-card';
 import { SeasonalTheme } from '@/components/ui/seasonal-theme';
 import { Parallax } from '@/components/ui/parallax';
 import LanguageToggle from '@/components/LanguageToggle';
-import { getLanguageText } from '@/lib/translation';
+import { getLanguageText, formatTime } from '@/lib/translation';
 
 interface Question {
   id: string;
