@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { toast } from 'sonner';
 import { LockIcon, UserIcon } from 'lucide-react';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
+import LanguageToggle from '@/components/LanguageToggle';
 
 const AdminLogin: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -38,14 +39,15 @@ const AdminLogin: React.FC = () => {
   };
   
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="absolute top-4 right-4">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4 bg-gradient-to-br from-background/60 to-background">
+      <div className="absolute top-4 right-4 flex space-x-2 z-50">
+        <LanguageToggle variant="minimal" />
         <ThemeSwitcher />
       </div>
       
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md glassmorphism-card backdrop-blur-md bg-background/30 dark:bg-background/20 border border-primary/10">
         <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">Admin Login</CardTitle>
+          <CardTitle className="text-2xl font-bold text-gradient">Admin Login</CardTitle>
           <CardDescription>
             Enter your credentials to access the admin dashboard
           </CardDescription>
@@ -59,7 +61,7 @@ const AdminLogin: React.FC = () => {
                 <Input
                   type="text"
                   placeholder="Username"
-                  className="pl-10"
+                  className="pl-10 glassmorphism-input"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
@@ -73,7 +75,7 @@ const AdminLogin: React.FC = () => {
                 <Input
                   type="password"
                   placeholder="Password"
-                  className="pl-10"
+                  className="pl-10 glassmorphism-input"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -85,8 +87,9 @@ const AdminLogin: React.FC = () => {
           <CardFooter>
             <Button 
               type="submit" 
-              className="w-full" 
+              className="w-full glassmorphism-button glass-shine" 
               disabled={isLoading}
+              variant="glass"
             >
               {isLoading ? 'Logging in...' : 'Login'}
             </Button>

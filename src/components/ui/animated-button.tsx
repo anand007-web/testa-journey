@@ -13,6 +13,7 @@ export const AnimatedButton: React.FC<AnimatedButtonProps> = ({
   animationType = 'scale',
   children,
   className,
+  variant = 'glass',
   ...props
 }) => {
   const getAnimationProps = () => {
@@ -65,6 +66,7 @@ export const AnimatedButton: React.FC<AnimatedButtonProps> = ({
   };
 
   const animationClassName = cn(
+    'glassmorphism-button',
     animationType === 'ripple' 
       ? 'relative overflow-hidden transition-all hover:before:opacity-100 before:absolute before:inset-0 before:opacity-0 before:bg-white/10 before:transition-opacity' 
       : '',
@@ -73,14 +75,16 @@ export const AnimatedButton: React.FC<AnimatedButtonProps> = ({
       : '',
     animationType === 'glass'
       ? 'backdrop-blur-md bg-white/10 dark:bg-black/10 border border-white/20 dark:border-white/10 hover:bg-white/20 dark:hover:bg-black/20'
-      : ''
+      : '',
+    className
   );
 
   return (
     <motion.div {...getAnimationProps()}>
       <Button
         {...props}
-        className={cn(animationClassName, className)}
+        variant={variant}
+        className={animationClassName}
       >
         {children}
       </Button>

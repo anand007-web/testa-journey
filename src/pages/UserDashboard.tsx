@@ -32,18 +32,19 @@ const UserDashboard = () => {
         <ThemeSwitcher />
       </div>
       
-      <div className="w-full max-w-md backdrop-blur-lg bg-background/30 dark:bg-background/20 border border-primary/10 rounded-lg p-8 shadow-lg">
+      <div className="w-full max-w-md glassmorphism-card backdrop-blur-lg bg-background/30 dark:bg-background/20 border border-primary/10 rounded-lg p-8 shadow-lg">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-primary">{t('nav.dashboard')}</h1>
+          <h1 className="text-3xl font-bold text-primary text-gradient">{t('nav.dashboard')}</h1>
           <p className="text-muted-foreground">{t('welcome')}, {user?.email}!</p>
         </div>
 
         <div className="space-y-6">
           <SeasonalTheme className="rounded-lg overflow-hidden">
             <AnimatedButton 
-              className="w-full bg-primary/80 backdrop-blur-sm"
+              className="w-full bg-primary/60 backdrop-blur-sm"
               asChild 
               animationType="bounce"
+              variant="glass"
             >
               <Link to="/quizzes">{t('nav.quizzes')}</Link>
             </AnimatedButton>
@@ -51,9 +52,10 @@ const UserDashboard = () => {
           
           <SeasonalTheme className="rounded-lg overflow-hidden">
             <AnimatedButton 
-              className="w-full bg-primary/80 backdrop-blur-sm"
+              className="w-full bg-primary/60 backdrop-blur-sm"
               asChild 
               animationType="glow"
+              variant="glass"
             >
               <Link to="/create-quiz">{t('nav.create')}</Link>
             </AnimatedButton>
@@ -61,7 +63,7 @@ const UserDashboard = () => {
           
           <SeasonalTheme className="rounded-lg overflow-hidden">
             <AnimatedButton 
-              className="w-full bg-destructive/80 backdrop-blur-sm"
+              className="w-full bg-destructive/60 backdrop-blur-sm"
               variant="destructive" 
               onClick={handleLogout}
               animationType="scale"

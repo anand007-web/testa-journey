@@ -17,7 +17,7 @@ const Index = () => {
         <ThemeSwitcher />
       </div>
 
-      <div className="w-full max-w-4xl animate-in backdrop-blur-sm">
+      <div className="w-full max-w-4xl animate-in backdrop-blur-lg">
         <HeartLoader />
         <h1 className="text-4xl md:text-5xl font-bold text-center mb-2 text-gradient">QuizHive</h1>
         <p className="text-center text-lg text-muted-foreground mb-8">
@@ -26,7 +26,7 @@ const Index = () => {
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <SeasonalTheme className="rounded-lg overflow-hidden">
-            <Card className="hover:shadow-lg transition-all duration-300 border-primary/20 hover:border-primary/60 glassmorphism-card">
+            <Card className="hover:shadow-lg transition-all duration-300 border-primary/20 hover:border-primary/60 glassmorphism-card backdrop-blur-md">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
@@ -39,12 +39,12 @@ const Index = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col gap-3">
-                <Button asChild variant="glass" className="w-full glass-shine relative overflow-hidden group">
+                <Button asChild variant="glass" className="w-full glass-shine relative overflow-hidden group glassmorphism-button">
                   <Link to="/login">
                     <span className="relative z-10">Login</span>
                   </Link>
                 </Button>
-                <Button asChild variant="outline" className="w-full backdrop-blur-sm">
+                <Button asChild variant="outline" className="w-full backdrop-blur-sm glassmorphism-button">
                   <Link to="/register">Register</Link>
                 </Button>
               </CardContent>
@@ -52,7 +52,7 @@ const Index = () => {
           </SeasonalTheme>
           
           <SeasonalTheme className="rounded-lg overflow-hidden">
-            <Card className="hover:shadow-lg transition-all duration-300 border-primary/20 hover:border-primary/60 glassmorphism-card">
+            <Card className="hover:shadow-lg transition-all duration-300 border-primary/20 hover:border-primary/60 glassmorphism-card backdrop-blur-md">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
@@ -65,7 +65,7 @@ const Index = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col gap-3">
-                <Button asChild variant="glass" className="w-full glass-shine relative overflow-hidden group">
+                <Button asChild variant="glass" className="w-full glass-shine relative overflow-hidden group glassmorphism-button">
                   <Link to="/create-quiz">
                     <span className="relative z-10">Create Quiz</span>
                   </Link>
@@ -78,7 +78,7 @@ const Index = () => {
           </SeasonalTheme>
           
           <SeasonalTheme className="rounded-lg overflow-hidden">
-            <Card className="hover:shadow-lg transition-all duration-300 border-primary/20 hover:border-primary/60 glassmorphism-card">
+            <Card className="hover:shadow-lg transition-all duration-300 border-primary/20 hover:border-primary/60 glassmorphism-card backdrop-blur-md">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
@@ -91,7 +91,7 @@ const Index = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col gap-3">
-                <Button asChild variant="glass" className="w-full glass-shine relative overflow-hidden group">
+                <Button asChild variant="glass" className="w-full glass-shine relative overflow-hidden group glassmorphism-button">
                   <Link to="/admin-login">
                     <span className="relative z-10">Admin Login</span>
                   </Link>
