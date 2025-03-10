@@ -7,6 +7,7 @@ import { useUserAuth } from '@/context/UserAuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 import LanguageToggle from '@/components/LanguageToggle';
+import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 
 const UserDashboard = () => {
   const { user, logout } = useUserAuth();
@@ -25,8 +26,9 @@ const UserDashboard = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-4 right-4 flex space-x-2 z-50">
         <LanguageToggle />
+        <ThemeSwitcher />
       </div>
       
       <div className="text-center mb-8">

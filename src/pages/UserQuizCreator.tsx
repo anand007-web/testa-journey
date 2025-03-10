@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useUserAuth } from '@/context/UserAuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import LanguageToggle from '@/components/LanguageToggle';
+import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 
 const UserQuizCreator = () => {
   const { user } = useUserAuth();
@@ -47,8 +48,9 @@ const UserQuizCreator = () => {
 
   return (
     <div className="min-h-screen bg-background p-6">
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-4 right-4 flex space-x-2 z-50">
         <LanguageToggle variant="minimal" />
+        <ThemeSwitcher />
       </div>
       
       <div className="max-w-7xl mx-auto">

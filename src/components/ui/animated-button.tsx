@@ -56,9 +56,14 @@ export const AnimatedButton: React.FC<AnimatedButtonProps> = ({
     }
   };
 
-  const animationClassName = animationType === 'ripple' 
-    ? 'relative overflow-hidden transition-all hover:before:opacity-100 before:absolute before:inset-0 before:opacity-0 before:bg-white/10 before:transition-opacity' 
-    : '';
+  const animationClassName = cn(
+    animationType === 'ripple' 
+      ? 'relative overflow-hidden transition-all hover:before:opacity-100 before:absolute before:inset-0 before:opacity-0 before:bg-white/10 before:transition-opacity' 
+      : '',
+    animationType === 'glow' 
+      ? 'animated-border' 
+      : ''
+  );
 
   return (
     <motion.div {...getAnimationProps()}>

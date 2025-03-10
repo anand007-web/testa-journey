@@ -38,6 +38,12 @@
     --ring: 224 71.4% 4.1%;
     
     --radius: 1rem;
+
+    /* Border animation colors */
+    --border-glow-primary: rgba(34, 111, 245, 0.6);
+    --border-glow-destructive: rgba(239, 68, 68, 0.6);
+    --border-glow-secondary: rgba(148, 163, 184, 0.6);
+    --border-glow-accent: rgba(99, 102, 241, 0.6);
   }
   
   .dark {
@@ -379,17 +385,13 @@
   /* Shimmer effect for loading states */
   .shimmer {
     @apply relative overflow-hidden;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
   }
   
   .shimmer::before {
     @apply absolute inset-0 -translate-x-full;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(255, 255, 255, 0.2) 50%,
-      transparent 100%
-    );
-    animation: shimmer 2s infinite;
     content: '';
   }
   
@@ -426,6 +428,81 @@
     @apply transition-transform duration-300 hover:scale-[1.02] hover:shadow-lg;
   }
 
+  /* Button border animation styles */
+  .border-animation-primary {
+    @apply after:absolute after:inset-0 after:rounded-md after:border-2 after:border-primary/60 after:opacity-0 after:transition-all hover:after:scale-105 hover:after:opacity-100 hover:after:animate-pulse;
+  }
+  
+  .border-animation-destructive {
+    @apply after:absolute after:inset-0 after:rounded-md after:border-2 after:border-destructive/60 after:opacity-0 after:transition-all hover:after:scale-105 hover:after:opacity-100 hover:after:animate-pulse;
+  }
+  
+  .border-animation-outline {
+    @apply after:absolute after:inset-0 after:rounded-md after:border-2 after:border-primary/60 after:opacity-0 after:transition-all hover:after:scale-105 hover:after:opacity-100 hover:after:animate-pulse;
+  }
+  
+  .border-animation-secondary {
+    @apply after:absolute after:inset-0 after:rounded-md after:border-2 after:border-secondary-foreground/30 after:opacity-0 after:transition-all hover:after:scale-105 hover:after:opacity-100 hover:after:animate-pulse;
+  }
+  
+  .border-animation-ghost {
+    @apply after:absolute after:inset-0 after:rounded-md after:border-2 after:border-accent-foreground/30 after:opacity-0 after:transition-all hover:after:scale-105 hover:after:opacity-100 hover:after:animate-pulse;
+  }
+  
+  .border-animation-link {
+    @apply relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-primary after:transition-all hover:after:w-full;
+  }
+  
+  /* Button hover effects with glowing border */
+  .btn-glow {
+    @apply relative;
+  }
+  
+  .btn-glow:before {
+    content: '';
+    @apply absolute -inset-0.5 rounded-lg bg-gradient-to-r from-primary via-primary/50 to-primary opacity-0 blur transition-opacity duration-300;
+  }
+  
+  .btn-glow:hover:before {
+    @apply opacity-100;
+  }
+  
+  .btn-glow-content {
+    @apply relative bg-background px-6 py-2 rounded-md;
+  }
+  
+  /* Animated border effect */
+  .animated-border {
+    @apply relative rounded-md overflow-hidden;
+  }
+  
+  .animated-border:before {
+    content: '';
+    @apply absolute inset-0 rounded-md;
+    background: conic-gradient(
+      from 0deg at 50% 50%,
+      hsl(var(--primary)) 0deg,
+      hsl(var(--secondary)) 90deg,
+      hsl(var(--accent)) 180deg,
+      hsl(var(--primary)) 360deg
+    );
+    animation: rotate 4s linear infinite;
+  }
+  
+  .animated-border:after {
+    content: '';
+    @apply absolute inset-0.5 rounded-md bg-background;
+  }
+  
+  @keyframes rotate {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  
   /* Theme-specific animations */
   @keyframes pulse-glow {
     0%, 100% { box-shadow: 0 0 5px rgba(var(--primary-rgb), 0.5); }

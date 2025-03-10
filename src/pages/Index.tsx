@@ -6,11 +6,13 @@ import { Button } from '@/components/ui/button';
 import { UserIcon, ShieldIcon, FileTextIcon } from 'lucide-react';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import HeartLoader from '@/components/HeartLoader';
+import LanguageToggle from '@/components/LanguageToggle';
 
 const Index = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4 transition-colors duration-300">
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-4 right-4 flex space-x-2 z-50">
+        <LanguageToggle variant="minimal" />
         <ThemeSwitcher />
       </div>
 

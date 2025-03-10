@@ -48,7 +48,11 @@ export function ThemeSwitcher() {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="icon" className="rounded-full">
+        <Button 
+          variant="outline" 
+          size="icon" 
+          className="rounded-full animated-border z-50"
+        >
           <Palette className="h-[1.2rem] w-[1.2rem]" />
           <span className="sr-only">Change theme</span>
         </Button>
