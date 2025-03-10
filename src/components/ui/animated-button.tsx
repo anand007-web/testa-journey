@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 interface AnimatedButtonProps extends ButtonProps {
-  animationType?: 'bounce' | 'pulse' | 'scale' | 'glow' | 'ripple';
+  animationType?: 'bounce' | 'pulse' | 'scale' | 'glow' | 'ripple' | 'glass';
   children: React.ReactNode;
 }
 
@@ -46,6 +46,14 @@ export const AnimatedButton: React.FC<AnimatedButtonProps> = ({
           },
           // Ripple effect handled with pseudo-elements in className
         };
+      case 'glass':
+        return {
+          whileHover: { 
+            backgroundColor: 'rgba(255, 255, 255, 0.15)',
+            backdropFilter: 'blur(10px)',
+            transition: { duration: 0.3 }
+          }
+        };
       case 'scale':
       default:
         return {
@@ -62,6 +70,9 @@ export const AnimatedButton: React.FC<AnimatedButtonProps> = ({
       : '',
     animationType === 'glow' 
       ? 'animated-border' 
+      : '',
+    animationType === 'glass'
+      ? 'backdrop-blur-md bg-white/10 dark:bg-black/10 border border-white/20 dark:border-white/10 hover:bg-white/20 dark:hover:bg-black/20'
       : ''
   );
 
