@@ -1,7 +1,7 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { AnimatedButton } from '@/components/ui/animated-button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { useUserAuth } from '../context/UserAuthContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { Badge } from '@/components/ui/badge';
 import { CheckIcon, XIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -17,19 +18,26 @@ import { CinematicTransition } from '@/components/ui/cinematic-transition';
 import { FlipCard } from '@/components/ui/flip-card';
 import { SeasonalTheme } from '@/components/ui/seasonal-theme';
 import { Parallax } from '@/components/ui/parallax';
+import LanguageToggle from '@/components/LanguageToggle';
+import { getLanguageText } from '@/lib/translation';
 
 interface Question {
   id: string;
   text: string;
+  text_hi?: string;
   options: string[];
+  options_hi?: string[];
   correctAnswer: number;
   explanation?: string;
+  explanation_hi?: string;
 }
 
 interface Quiz {
   id: string;
   title: string;
+  title_hi?: string;
   description: string;
+  description_hi?: string;
   category: string;
   questions: Question[];
   createdAt: string;
@@ -39,6 +47,7 @@ const QuizPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user, isAuthenticated } = useUserAuth();
+  const { language, t } = useLanguage();
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -55,7 +64,7 @@ const QuizPage = () => {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      toast.error('You must be logged in to take a quiz');
+      toast.error(t('error.login'));
       navigate('/login');
       return;
     }
@@ -66,44 +75,34 @@ const QuizPage = () => {
         const foundQuiz = quizzes.find((q: Quiz) => q.id === id);
         
         if (foundQuiz) {
-          setQuiz(foundQuiz);
-          setAnswers(new Array(foundQuiz.questions.length).fill(null));
-          setTimeRemaining(foundQuiz.questions.length * 120);
+          const processedQuiz = {
+            ...foundQuiz,
+            questions: foundQuiz.questions.map((q: any) => ({
+              ...q,
+              text_hi: q.question_text_hi || '',
+              explanation_hi: q.explanation_hi || '',
+              options_hi: q.options_hi || q.options
+            }))
+          };
+          
+          setQuiz(processedQuiz);
+          setAnswers(new Array(processedQuiz.questions.length).fill(null));
+          setTimeRemaining(processedQuiz.questions.length * 120);
           setTimerActive(true);
         } else {
-          toast.error('Quiz not found');
+          toast.error(t('quiz.not.found'));
           navigate('/quizzes');
         }
       } catch (error) {
         console.error('Error fetching quiz:', error);
-        toast.error('Failed to load quiz');
+        toast.error(t('error.load.quiz'));
       } finally {
         setLoading(false);
       }
     };
 
     fetchQuiz();
-  }, [id, navigate, isAuthenticated]);
-
-  useEffect(() => {
-    if (!timerActive || timeRemaining <= 0) return;
-    
-    const timer = setInterval(() => {
-      setTimeRemaining(prev => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          if (!quizCompleted) {
-            toast.warning('Time\'s up! Quiz will be submitted automatically.');
-            handleFinishQuiz();
-          }
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [timerActive, timeRemaining, quizCompleted]);
+  }, [id, navigate, isAuthenticated, t]);
 
   const handleSelectAnswer = (index: number) => {
     if (reviewMode) return;
@@ -119,7 +118,6 @@ const QuizPage = () => {
     setShowExplanation(false);
     setSelectedAnswer(null);
     
-    // Trigger cinematic transition
     setTransitionEffect('slide-left');
     setShowContent(false);
     
@@ -130,14 +128,13 @@ const QuizPage = () => {
         handleFinishQuiz();
       }
       setShowContent(true);
-    }, 300); // Match with transition duration
+    }, 300);
   };
 
   const handlePrevQuestion = () => {
     if (currentQuestionIndex > 0) {
       setShowExplanation(false);
       
-      // Trigger cinematic transition
       setTransitionEffect('slide-right');
       setShowContent(false);
       
@@ -145,7 +142,7 @@ const QuizPage = () => {
         setSelectedAnswer(answers[currentQuestionIndex - 1]);
         setCurrentQuestionIndex(prevIndex => prevIndex - 1);
         setShowContent(true);
-      }, 300); // Match with transition duration
+      }, 300);
     }
   };
 
@@ -200,10 +197,23 @@ const QuizPage = () => {
     setCurrentQuestionIndex(0);
   };
 
-  const formatTime = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  const getQuestionText = (question: Question | undefined) => {
+    if (!question) return '';
+    return language === 'hi' && question.text_hi ? question.text_hi : question.text;
+  };
+
+  const getExplanationText = (question: Question | undefined) => {
+    if (!question || !question.explanation) return '';
+    return language === 'hi' && question.explanation_hi ? question.explanation_hi : question.explanation;
+  };
+
+  const getOptionText = (question: Question | undefined, optionIndex: number) => {
+    if (!question || !question.options || question.options.length <= optionIndex) return '';
+    
+    if (language === 'hi' && question.options_hi && question.options_hi[optionIndex]) {
+      return question.options_hi[optionIndex];
+    }
+    return question.options[optionIndex];
   };
 
   const currentQuestion = quiz?.questions[currentQuestionIndex];
@@ -226,10 +236,12 @@ const QuizPage = () => {
       <div className="container mx-auto p-4">
         <Card>
           <CardContent className="p-6">
-            <h2 className="text-2xl font-bold text-center">Quiz not found</h2>
-            <p className="text-center mt-4">The quiz you're looking for doesn't exist or has been removed.</p>
+            <h2 className="text-2xl font-bold text-center">{t('quiz.not.found')}</h2>
+            <p className="text-center mt-4">{t('quiz.not.found.description')}</p>
             <div className="flex justify-center mt-6">
-              <Button onClick={() => navigate('/quizzes')}>Return to Quizzes</Button>
+              <AnimatedButton onClick={() => navigate('/quizzes')} animationType="bounce">
+                {t('button.return.quizzes')}
+              </AnimatedButton>
             </div>
           </CardContent>
         </Card>
@@ -240,6 +252,10 @@ const QuizPage = () => {
   if (quizCompleted && !reviewMode) {
     return (
       <div className="container mx-auto p-4 relative overflow-hidden">
+        <div className="absolute top-4 right-4 z-10">
+          <LanguageToggle variant="minimal" />
+        </div>
+        
         <Particles 
           className="absolute inset-0" 
           quantity={100} 
@@ -254,7 +270,7 @@ const QuizPage = () => {
           >
             <Card className="backdrop-blur-sm bg-background/80 shadow-xl border-primary/20">
               <CardHeader>
-                <CardTitle className="text-2xl text-center text-gradient">Quiz Completed!</CardTitle>
+                <CardTitle className="text-2xl text-center text-gradient">{t('quiz.completed')}</CardTitle>
               </CardHeader>
               <CardContent className="p-6">
                 <div className="text-center mb-6">
@@ -270,23 +286,25 @@ const QuizPage = () => {
                     
                     <div className="text-center">
                       <p className="text-lg">
-                        You got {answers.filter((ans, idx) => ans === quiz.questions[idx].correctAnswer).length} out of {quiz.questions.length} questions correct
+                        {t('quiz.result.correct', `You got ${answers.filter((ans, idx) => ans === quiz.questions[idx].correctAnswer).length} out of ${quiz.questions.length} questions correct`)}
                       </p>
                       <p className="text-sm text-muted-foreground mt-1">
-                        Time spent: {formatTime(quiz.questions.length * 120 - timeRemaining)}
+                        {t('quiz.result.time', `Time spent: ${formatTime(quiz.questions.length * 120 - timeRemaining)}`)}
                       </p>
                     </div>
                   </div>
                 </Parallax>
               </CardContent>
               <CardFooter className="flex justify-center space-x-4">
-                <Button onClick={startReviewMode} variant="default" className="animate-float">Review Solutions</Button>
-                <Button onClick={() => navigate('/dashboard')} variant="outline" className="group">
-                  <span className="group-hover:animate-slide-right inline-block">Go to Dashboard</span>
-                </Button>
-                <Button variant="outline" onClick={() => navigate('/quizzes')} className="group">
-                  <span className="group-hover:animate-bounce inline-block">Take Another Quiz</span>
-                </Button>
+                <AnimatedButton onClick={startReviewMode} variant="default" animationType="glow">
+                  {t('button.review')}
+                </AnimatedButton>
+                <AnimatedButton onClick={() => navigate('/dashboard')} variant="outline" animationType="scale">
+                  {t('nav.dashboard')}
+                </AnimatedButton>
+                <AnimatedButton variant="outline" onClick={() => navigate('/quizzes')} animationType="bounce">
+                  {t('button.another.quiz')}
+                </AnimatedButton>
               </CardFooter>
             </Card>
           </CinematicTransition>
@@ -297,6 +315,10 @@ const QuizPage = () => {
 
   return (
     <div className="container mx-auto p-4 relative min-h-screen">
+      <div className="absolute top-4 right-4 z-10">
+        <LanguageToggle variant="minimal" />
+      </div>
+      
       {!reviewMode && (
         <Particles 
           className="absolute inset-0 opacity-40" 
@@ -314,19 +336,19 @@ const QuizPage = () => {
             <div className="flex flex-col md:flex-row md:items-center md:justify-between">
               <CardTitle className="text-xl md:text-2xl animate-fade-in">
                 {quiz.title}
-                {reviewMode && <Badge variant="outline" className="ml-2 bg-primary/10 animate-pulse">Review Mode</Badge>}
+                {reviewMode && <Badge variant="outline" className="ml-2 bg-primary/10 animate-pulse">{t('quiz.review.mode')}</Badge>}
               </CardTitle>
               {!reviewMode && (
                 <div className="text-sm text-muted-foreground mt-2 md:mt-0 animate-fade-in">
-                  Time Remaining: <span className={timeRemaining < 60 ? "text-red-500 font-semibold animate-pulse" : ""}>{formatTime(timeRemaining)}</span>
+                  {t('quiz.time.remaining')}: <span className={timeRemaining < 60 ? "text-red-500 font-semibold animate-pulse" : ""}>{formatTime(timeRemaining)}</span>
                 </div>
               )}
             </div>
             <div className="mt-4 animate-fade-in">
               <Progress value={progress} className="h-2" />
               <div className="flex justify-between mt-1 text-sm text-muted-foreground">
-                <span>Question {currentQuestionIndex + 1} of {quiz.questions.length}</span>
-                <span>Progress: {Math.round(progress)}%</span>
+                <span>{t('quiz.question')} {currentQuestionIndex + 1} {t('quiz.of')} {quiz.questions.length}</span>
+                <span>{t('quiz.progress')}: {Math.round(progress)}%</span>
               </div>
             </div>
           </CardHeader>
@@ -336,12 +358,12 @@ const QuizPage = () => {
               <CinematicTransition show={showContent} effect={transitionEffect} duration={300}>
                 <div>
                   <Parallax speed={0.2} disabled={reviewMode}>
-                    <h3 className="text-lg font-semibold mb-4">{currentQuestion.text}</h3>
+                    <h3 className="text-lg font-semibold mb-4">{getQuestionText(currentQuestion)}</h3>
                   </Parallax>
                   
                   <RadioGroup value={selectedAnswer !== null ? selectedAnswer.toString() : undefined} onValueChange={(value) => handleSelectAnswer(parseInt(value))}>
                     <div className="space-y-3">
-                      {currentQuestion.options.map((option, index) => {
+                      {currentQuestion.options.map((_, index) => {
                         const isCorrect = currentQuestion.correctAnswer === index;
                         const isSelected = reviewMode ? answers[currentQuestionIndex] === index : selectedAnswer === index;
                         const showCorrectness = reviewMode || (showExplanation && selectedAnswer !== null);
@@ -361,7 +383,7 @@ const QuizPage = () => {
                           >
                             <RadioGroupItem value={index.toString()} id={`option-${index}`} disabled={reviewMode} />
                             <Label htmlFor={`option-${index}`} className="flex-grow p-2 cursor-pointer">
-                              {option}
+                              {getOptionText(currentQuestion, index)}
                             </Label>
                             
                             {showCorrectness && (
@@ -369,13 +391,13 @@ const QuizPage = () => {
                                 {isCorrect && (
                                   <span className="text-green-600 flex items-center gap-1 animate-fade-in">
                                     <CheckIcon size={16} className="animate-bounce" />
-                                    {!isSelected && reviewMode && "Correct Answer"}
+                                    {!isSelected && reviewMode && t('quiz.correct.answer')}
                                   </span>
                                 )}
                                 {!isCorrect && isSelected && (
                                   <span className="text-red-600 flex items-center gap-1 animate-fade-in">
                                     <XIcon size={16} className="animate-shake" />
-                                    Wrong
+                                    {t('quiz.incorrect')}
                                   </span>
                                 )}
                               </>
@@ -388,11 +410,11 @@ const QuizPage = () => {
                   
                   {(showExplanation || reviewMode) && currentQuestion.explanation && (
                     <div className="mt-6 p-4 bg-muted/50 rounded-md animate-slide-up backdrop-blur-sm">
-                      <h4 className="font-semibold">Explanation:</h4>
-                      <p className="mt-2">{currentQuestion.explanation}</p>
+                      <h4 className="font-semibold">{t('quiz.explanation')}:</h4>
+                      <p className="mt-2">{getExplanationText(currentQuestion)}</p>
                       <div className="mt-2">
-                        <span className="font-semibold">Correct answer: </span>
-                        <span>{currentQuestion.options[currentQuestion.correctAnswer]}</span>
+                        <span className="font-semibold">{t('quiz.correct.answer')}: </span>
+                        <span>{getOptionText(currentQuestion, currentQuestion.correctAnswer)}</span>
                       </div>
                     </div>
                   )}
@@ -405,20 +427,20 @@ const QuizPage = () => {
           
           <CardFooter className="flex justify-between p-4">
             <div>
-              <Button 
+              <AnimatedButton 
                 variant="outline" 
                 onClick={handlePrevQuestion}
                 disabled={currentQuestionIndex === 0}
-                className="group transition-all"
+                animationType="ripple"
               >
-                <span className="inline-block group-hover:-translate-x-1 transition-transform">Previous</span>
-              </Button>
+                {t('button.previous')}
+              </AnimatedButton>
             </div>
             
             <div className="flex space-x-2">
               {reviewMode ? (
                 currentQuestionIndex < quiz.questions.length - 1 ? (
-                  <Button onClick={() => {
+                  <AnimatedButton onClick={() => {
                     setTransitionEffect('slide-left');
                     setShowContent(false);
                     setTimeout(() => {
@@ -426,34 +448,29 @@ const QuizPage = () => {
                       setShowContent(true);
                     }, 300);
                   }}
-                  className="group transition-all">
-                    <span className="inline-block group-hover:translate-x-1 transition-transform">Next</span>
-                  </Button>
+                  animationType="bounce">
+                    {t('button.next')}
+                  </AnimatedButton>
                 ) : (
-                  <Button onClick={() => navigate('/dashboard')} className="animate-pulse">
-                    Finish Review
-                  </Button>
+                  <AnimatedButton onClick={() => navigate('/dashboard')} animationType="pulse">
+                    {t('button.finish.review')}
+                  </AnimatedButton>
                 )
               ) : (
                 <>
                   {!showExplanation && selectedAnswer !== null && (
-                    <Button variant="secondary" onClick={handleShowExplanation} className="animate-fade-in">
-                      Show Explanation
-                    </Button>
+                    <AnimatedButton variant="secondary" onClick={handleShowExplanation} animationType="scale">
+                      {t('button.show.explanation')}
+                    </AnimatedButton>
                   )}
                   
-                  <Button 
+                  <AnimatedButton 
                     onClick={handleNextQuestion}
                     disabled={selectedAnswer === null}
-                    className={cn(
-                      "group transition-all",
-                      selectedAnswer !== null ? "animate-pulse-light" : ""
-                    )}
+                    animationType="glow"
                   >
-                    <span className="inline-block group-hover:translate-x-1 transition-transform">
-                      {currentQuestionIndex < quiz.questions.length - 1 ? 'Next' : 'Finish Quiz'}
-                    </span>
-                  </Button>
+                    {currentQuestionIndex < quiz.questions.length - 1 ? t('button.next') : t('button.finish')}
+                  </AnimatedButton>
                 </>
               )}
             </div>

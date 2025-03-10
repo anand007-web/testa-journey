@@ -12,6 +12,7 @@ export type Database = {
       answers: {
         Row: {
           answer_text: string
+          answer_text_hi: string | null
           created_at: string | null
           id: string
           is_correct: boolean | null
@@ -20,6 +21,7 @@ export type Database = {
         }
         Insert: {
           answer_text: string
+          answer_text_hi?: string | null
           created_at?: string | null
           id?: string
           is_correct?: boolean | null
@@ -28,6 +30,7 @@ export type Database = {
         }
         Update: {
           answer_text?: string
+          answer_text_hi?: string | null
           created_at?: string | null
           id?: string
           is_correct?: boolean | null
@@ -97,9 +100,11 @@ export type Database = {
           created_at: string | null
           difficulty: string | null
           explanation: string | null
+          explanation_hi: string | null
           id: string
           points: number | null
           question_text: string
+          question_text_hi: string | null
           quiz_id: string | null
           updated_at: string | null
         }
@@ -107,9 +112,11 @@ export type Database = {
           created_at?: string | null
           difficulty?: string | null
           explanation?: string | null
+          explanation_hi?: string | null
           id?: string
           points?: number | null
           question_text: string
+          question_text_hi?: string | null
           quiz_id?: string | null
           updated_at?: string | null
         }
@@ -117,9 +124,11 @@ export type Database = {
           created_at?: string | null
           difficulty?: string | null
           explanation?: string | null
+          explanation_hi?: string | null
           id?: string
           points?: number | null
           question_text?: string
+          question_text_hi?: string | null
           quiz_id?: string | null
           updated_at?: string | null
         }
@@ -226,6 +235,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_preferences: {
+        Row: {
+          created_at: string | null
+          id: string
+          language: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          language?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          language?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {

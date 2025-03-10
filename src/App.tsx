@@ -12,6 +12,7 @@ import { AdminAuthProvider } from "./context/AdminAuthContext";
 import { UserAuthProvider } from "./context/UserAuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import { CustomThemeProvider } from "./context/CustomThemeContext";
+import { LanguageProvider } from "./context/LanguageContext";
 import { useEffect } from "react";
 import { initializeQuizData } from "./data/quizModels";
 import UserLogin from "./pages/UserLogin";
@@ -38,25 +39,27 @@ const App = () => {
           <TooltipProvider>
             <AdminAuthProvider>
               <UserAuthProvider>
-                <Toaster />
-                <Sonner />
-                <DatabaseNotice />
-                <BrowserRouter>
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/admin-login" element={<AdminLogin />} />
-                    <Route path="/admin" element={<Admin />} />
-                    <Route path="/login" element={<UserLogin />} />
-                    <Route path="/register" element={<UserRegister />} />
-                    <Route path="/dashboard" element={<UserDashboard />} />
-                    <Route path="/quizzes" element={<QuizList />} />
-                    <Route path="/quiz/:id" element={<QuizPage />} />
-                    <Route path="/create-quiz" element={<UserQuizCreator />} />
-                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                  <HeartFooter />
-                </BrowserRouter>
+                <LanguageProvider>
+                  <Toaster />
+                  <Sonner />
+                  <DatabaseNotice />
+                  <BrowserRouter>
+                    <Routes>
+                      <Route path="/" element={<Index />} />
+                      <Route path="/admin-login" element={<AdminLogin />} />
+                      <Route path="/admin" element={<Admin />} />
+                      <Route path="/login" element={<UserLogin />} />
+                      <Route path="/register" element={<UserRegister />} />
+                      <Route path="/dashboard" element={<UserDashboard />} />
+                      <Route path="/quizzes" element={<QuizList />} />
+                      <Route path="/quiz/:id" element={<QuizPage />} />
+                      <Route path="/create-quiz" element={<UserQuizCreator />} />
+                      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                    <HeartFooter />
+                  </BrowserRouter>
+                </LanguageProvider>
               </UserAuthProvider>
             </AdminAuthProvider>
           </TooltipProvider>

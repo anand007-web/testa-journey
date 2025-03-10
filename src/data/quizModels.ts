@@ -1,4 +1,3 @@
-
 import { Question as QuestionData, DifficultyLevel } from '@/data/questionData';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,7 +13,9 @@ export interface Category {
 export interface Quiz {
   id: string;
   title: string;
+  titleHi?: string;
   description: string;
+  descriptionHi?: string;
   categoryId: string;
   questions: QuestionData[];
   timeLimit?: number; // In minutes, optional
@@ -103,11 +104,17 @@ export const getQuizzes = async (): Promise<Quiz[]> => {
         
         const correctAnswerIndex = questionAnswers.findIndex(a => a.is_correct);
         
+        const options = questionAnswers.map(answer => answer.answer_text);
+        const optionsHi = questionAnswers.map(answer => answer.answer_text_hi || answer.answer_text);
+        
         return {
           id: parseInt(question.id.toString()),
           text: question.question_text,
+          textHi: question.question_text_hi,
           explanation: question.explanation || '',
-          options: questionAnswers.map(answer => answer.answer_text),
+          explanationHi: question.explanation_hi || '',
+          options: options,
+          optionsHi: optionsHi,
           correctAnswer: correctAnswerIndex !== -1 ? correctAnswerIndex : 0,
           difficulty: (question.difficulty as DifficultyLevel) || 'medium',
           points: question.points || 1
@@ -117,7 +124,9 @@ export const getQuizzes = async (): Promise<Quiz[]> => {
       return {
         id: quiz.id,
         title: quiz.title,
+        titleHi: quiz.title_hi,
         description: quiz.description || '',
+        descriptionHi: quiz.description_hi || '',
         categoryId: quiz.category_id || '',
         questions: questions,
         timeLimit: quiz.time_limit,
@@ -205,7 +214,9 @@ export const saveQuiz = async (quiz: Quiz): Promise<boolean> => {
     const quizData = {
       id: quiz.id,
       title: quiz.title,
+      title_hi: quiz.titleHi || null,
       description: quiz.description || null,
+      description_hi: quiz.descriptionHi || null,
       category_id: quiz.categoryId,
       time_limit: quiz.timeLimit || null,
       passing_score: quiz.passingScore || null,
@@ -250,9 +261,11 @@ export const saveQuiz = async (quiz: Quiz): Promise<boolean> => {
         id: question.id.toString(),
         quiz_id: quiz.id,
         question_text: question.text,
+        question_text_hi: question.textHi || null,
         difficulty: question.difficulty,
         explanation: question.explanation || null,
-        points: question.points || 1  // Default to 1 if points not provided
+        explanation_hi: question.explanationHi || null,
+        points: question.points || 1
       };
       
       const { data: existingQuestion } = await supabase
@@ -282,6 +295,7 @@ export const saveQuiz = async (quiz: Quiz): Promise<boolean> => {
       
       for (let i = 0; i < question.options.length; i++) {
         const option = question.options[i];
+        const optionHi = question.optionsHi && question.optionsHi[i] ? question.optionsHi[i] : null;
         const isCorrect = i === question.correctAnswer;
         
         const answerId = `${question.id}_${i}`;
@@ -289,6 +303,7 @@ export const saveQuiz = async (quiz: Quiz): Promise<boolean> => {
           id: answerId,
           question_id: question.id.toString(),
           answer_text: option,
+          answer_text_hi: optionHi,
           is_correct: isCorrect
         };
         

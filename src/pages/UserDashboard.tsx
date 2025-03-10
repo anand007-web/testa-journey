@@ -1,11 +1,16 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { AnimatedButton } from '@/components/ui/animated-button';
 import { useUserAuth } from '@/context/UserAuthContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { useNavigate } from 'react-router-dom';
+import LanguageToggle from '@/components/LanguageToggle';
 
 const UserDashboard = () => {
   const { user, logout } = useUserAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -20,21 +25,31 @@ const UserDashboard = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
+      <div className="absolute top-4 right-4">
+        <LanguageToggle />
+      </div>
+      
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-primary">User Dashboard</h1>
-        <p className="text-muted-foreground">Welcome, {user?.email}!</p>
+        <h1 className="text-3xl font-bold text-primary">{t('nav.dashboard')}</h1>
+        <p className="text-muted-foreground">{t('welcome')}, {user?.email}!</p>
       </div>
 
       <div className="space-y-4">
-        <Button asChild>
-          <Link to="/quizzes">View Available Quizzes</Link>
-        </Button>
-        <Button asChild>
-            <Link to="/create-quiz">Create Your Quiz</Link>
-        </Button>
-        <Button variant="destructive" onClick={handleLogout}>
-          Logout
-        </Button>
+        <AnimatedButton asChild animationType="bounce">
+          <Link to="/quizzes">{t('nav.quizzes')}</Link>
+        </AnimatedButton>
+        
+        <AnimatedButton asChild animationType="glow">
+          <Link to="/create-quiz">{t('nav.create')}</Link>
+        </AnimatedButton>
+        
+        <AnimatedButton 
+          variant="destructive" 
+          onClick={handleLogout}
+          animationType="scale"
+        >
+          {t('button.logout')}
+        </AnimatedButton>
       </div>
     </div>
   );

@@ -1,24 +1,29 @@
-
 export type DifficultyLevel = 'easy' | 'medium' | 'hard';
 
 export interface Question {
   id: number;
   text: string;
+  textHi?: string;
   options: string[];
+  optionsHi?: string[];
   correctAnswer: number;
   explanation: string;
+  explanationHi?: string;
   difficulty: DifficultyLevel;
   category?: string;
-  points?: number; // Add points as an optional property
+  points?: number;
 }
 
 export const questions: Question[] = [
   {
     id: 1,
     text: "What is the capital of France?",
+    textHi: "फ्रांस की राजधानी क्या है?",
     options: ["London", "Berlin", "Paris", "Madrid"],
+    optionsHi: ["लंदन", "बर्लिन", "पेरिस", "मैड्रिड"],
     correctAnswer: 2,
     explanation: "Paris is the capital city of France, known for landmarks like the Eiffel Tower and Louvre Museum.",
+    explanationHi: "पेरिस फ्रांस की राजधानी है, जो आइफिल टॉवर और लूव्र संग्रहालय जैसे प्रसिद्ध स्थलों के लिए जाना जाता है।",
     difficulty: "easy",
     category: "general"
   },

@@ -4,13 +4,16 @@ import { useNavigate } from 'react-router-dom';
 import { UserQuizManager } from '@/components/user/UserQuizManager';
 import { UserQuizQuestionManager } from '@/components/user/UserQuizQuestionManager';
 import { Quiz } from '@/data/quizModels';
-import { Button } from '@/components/ui/button';
+import { AnimatedButton } from '@/components/ui/animated-button';
 import { ArrowLeftIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUserAuth } from '@/context/UserAuthContext';
+import { useLanguage } from '@/context/LanguageContext';
+import LanguageToggle from '@/components/LanguageToggle';
 
 const UserQuizCreator = () => {
   const { user } = useUserAuth();
+  const { t } = useLanguage();
   const [editingQuizQuestions, setEditingQuizQuestions] = useState(false);
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
   const navigate = useNavigate();
@@ -32,8 +35,8 @@ const UserQuizCreator = () => {
 
   const handleSaveQuiz = (quiz: Quiz) => {
     toast({
-      title: "Quiz Saved",
-      description: `Your quiz "${quiz.title}" has been saved successfully.`,
+      title: t('quiz.saved'),
+      description: `${t('quiz.saved.description')} "${quiz.title}"`,
     });
   };
 
@@ -44,21 +47,26 @@ const UserQuizCreator = () => {
 
   return (
     <div className="min-h-screen bg-background p-6">
+      <div className="absolute top-4 right-4">
+        <LanguageToggle variant="minimal" />
+      </div>
+      
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center mb-8">
-          <Button 
+          <AnimatedButton 
             variant="outline" 
             size="sm" 
             onClick={handleBackToDashboard}
             className="mr-4"
+            animationType="ripple"
           >
             <ArrowLeftIcon className="h-4 w-4 mr-2" />
-            Back to Dashboard
-          </Button>
+            {t('button.back')}
+          </AnimatedButton>
           <h1 className="text-3xl font-bold">
             {editingQuizQuestions 
-              ? `Editing Questions: ${selectedQuiz?.title}` 
-              : 'Create Your Quiz'}
+              ? `${t('quiz.editing')}: ${selectedQuiz?.title}` 
+              : t('quiz.create')}
           </h1>
         </div>
 
