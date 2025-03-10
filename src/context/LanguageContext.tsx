@@ -1,16 +1,12 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-
-type Language = 'en' | 'hi';
+import { Language } from '@/lib/translation';
 
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
   t: (key: string, fallback?: string) => string;
 }
-
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 // Basic translations for UI elements
 const translations: Record<string, Record<Language, string>> = {
@@ -123,6 +119,8 @@ const translations: Record<string, Record<Language, string>> = {
     hi: 'हिंदी'
   }
 };
+
+const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [language, setLanguageState] = useState<Language>('en');

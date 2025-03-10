@@ -1,5 +1,6 @@
 
-import { Language } from '@/context/LanguageContext';
+// Export the Language type so it can be imported elsewhere
+export type Language = 'en' | 'hi';
 
 // Simple function to check if the text is in Devanagari script (Hindi)
 export const isHindiText = (text: string): boolean => {
@@ -22,6 +23,13 @@ export const getLanguageText = (
   
   // Fallback to available text
   return textHi || textEn || '';
+};
+
+// Format time function (missing in the QuizPage component)
+export const formatTime = (seconds: number): string => {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
 };
 
 // Mock translation function - in a real app, this would call a translation API
